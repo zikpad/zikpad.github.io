@@ -141,6 +141,7 @@ export class InteractionScore {
         this.updateAsked = false;
     }
     setup() {
+        document.getElementById("playButton").addEventListener("click", (evt) => alert("not be implemented yet! Come back in few days!"));
         let circles = document.getElementsByTagName("circle");
         for (let i = 0; i < circles.length; i++) {
             let circle = circles[i];
