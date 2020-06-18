@@ -7,6 +7,14 @@ let Voice = /** @class */ (() => {
             this.timeSteps = [];
             this.color = color;
         }
+        getNotesBetween(t1, t2) {
+            let result = [];
+            for (let timeStep of this.timeSteps) {
+                if ((t1 <= timeStep.t) && (timeStep.t < t2))
+                    result = result.concat(timeStep.notes);
+            }
+            return result;
+        }
         removeNote(note) {
             note.delete();
             const index = this.notes.indexOf(note);

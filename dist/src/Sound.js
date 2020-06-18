@@ -1,4 +1,3 @@
-var oscillator = {};
 var context = new window.AudioContext();
 let url = "";
 class Timbre {
@@ -41,9 +40,8 @@ class Timbre {
         return audio;
     }
 }
-var source, gainNode;
 let timbrePiano = getTimbrePiano();
-let timbreClarinet = getTimbreClarinet();
+//let timbreClarinet = getTimbreClarinet();
 let getTimbre = (midiNote, velocity) => timbrePiano;
 /**load piano sounds*/
 function getTimbrePiano() {
@@ -67,25 +65,30 @@ function getFrequencyTempered(midiNote, velocity) {
     return 440 * Math.pow(2, 3 / 12) * Math.pow(2, numero / 12);
 }
 export class Sounds {
+    constructor() {
+        this.oscillator = {};
+    }
     noteOn(midiNote, velocity) {
-        stopOscillator(midiNote);
-        var frequency = getFrequencyTempered(midiNote, velocity);
+        console.log("noteOn");
+        //this.stopOscillator(midiNote);
+        let frequency = getFrequencyTempered(midiNote, velocity);
         //velocity = getVelocity(midiNote, velocity);
         let timbre = getTimbre(midiNote, velocity);
-        var audio = timbre.getAudio(context, frequency);
-        var gainNode = context.createGain();
+        let audio = timbre.getAudio(context, frequency);
+        let gainNode = context.createGain();
         gainNode.gain.value = velocity / 64;
         audio.connect(gainNode);
         gainNode.connect(context.destination);
         audio.start(0);
-        oscillator[midiNote] = audio;
+        this.oscillator[midiNote] = audio;
     }
-    noteOff(midiNote, velocity) {
-        stopOscillator(midiNote);
+    stop() {
+        for (let midiNote in this.oscillator)
+            this.stopOscillator(midiNote);
     }
-}
-function stopOscillator(midiNote) {
-    if (oscillator[midiNote] != undefined)
-        oscillator[midiNote].stop(context.currentTime);
+    stopOscillator(midiNote) {
+        if (this.oscillator[midiNote] != undefined)
+            this.oscillator[midiNote].stop(context.currentTime);
+    }
 }
 //# sourceMappingURL=Sound.js.map

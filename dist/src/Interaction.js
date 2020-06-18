@@ -1,3 +1,4 @@
+import { Player } from './Player.js';
 import { Note } from "./Note.js";
 import { Layout } from "./Layout.js";
 import { Voice } from "./Voice.js";
@@ -122,6 +123,7 @@ export class InteractionScore {
     constructor(score) {
         this.dragOccurred = false;
         this.updateAsked = false;
+        this.player = undefined;
         this.score = score;
         this.currentVoice = this.score.voices[0];
         score.update();
@@ -133,6 +135,18 @@ export class InteractionScore {
             b.addEventListener("click", () => this.currentVoice = score.voices[i]);
             document.getElementById("voiceButtonPalette").appendChild(b);
         }
+        document.getElementById("playButton").addEventListener("click", (evt) => {
+            console.log("button play");
+            if (this.player == undefined) {
+                this.player = new Player(this.score);
+                document.getElementById("playButton").innerHTML = "stop!";
+            }
+            else {
+                this.player.stop();
+                this.player = undefined;
+                document.getElementById("playButton").innerHTML = "play!";
+            }
+        });
         this.setup();
     }
     update() {
@@ -141,7 +155,6 @@ export class InteractionScore {
         this.updateAsked = false;
     }
     setup() {
-        document.getElementById("playButton").addEventListener("click", (evt) => alert("not be implemented yet! Come back in few days!"));
         let circles = document.getElementsByTagName("circle");
         for (let i = 0; i < circles.length; i++) {
             let circle = circles[i];

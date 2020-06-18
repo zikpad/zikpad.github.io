@@ -18,8 +18,8 @@ export class Analyzer {
                 timeSteps[i].duration = getDuration(timeSteps[i + 1].t - timeSteps[i].t);
             else
                 timeSteps[i].duration = getDuration(1 - timeSteps[i].t);
-            t += timeSteps[i].duration;
             timeSteps[i].t = t;
+            t += timeSteps[i].duration;
         }
     }
     _draw() {
