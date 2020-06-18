@@ -1,0 +1,61 @@
+svg {
+	width: 20000px;
+}
+
+
+
+
+#svg-wrapper {
+	overflow-x: scroll;
+	overflow-y: hidden;
+	height: 800px;
+
+}
+
+
+circle {
+	stroke-width: 3px;
+}
+
+
+text {
+	font-size: 28px;
+	pointer-events: none;
+}
+
+circle:hover {
+	stroke-width: 7px;
+}
+
+
+
+.silence {
+	stroke: rgb(219, 219, 219);
+	opacity: 0.5;
+}
+
+
+.silence:hover {
+	stroke: rgb(163, 226, 255);
+}
+
+line {
+	pointer-events: none;
+}
+
+input {
+	width: 500px;
+}
+
+
+.voiceButton {
+	width: 64px;
+	height: 48px;
+	border: 1px solid black;
+}
+
+
+
+#playButton {
+	position: absolute;
+}
