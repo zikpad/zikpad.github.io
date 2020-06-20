@@ -121,18 +121,27 @@ const KeyEvent = {
 };
 export class InteractionScore {
     constructor(score) {
+        this.selection = [];
         this.dragOccurred = false;
         this.updateAsked = false;
         this.player = undefined;
         this.score = score;
         this.currentVoice = this.score.voices[0];
         score.update();
+        document.getElementById("voiceButtonPalette").innerHTML = "";
         for (let i in Voice.voiceColors) {
             let b = document.createElement("button");
             b.classList.add("voiceButton");
             b.title = "write in voice n°" + i;
             b.style.backgroundColor = Voice.voiceColors[i];
-            b.addEventListener("click", () => this.currentVoice = score.voices[i]);
+            b.addEventListener("click", () => {
+                this.currentVoice = score.voices[i];
+                for (let note of this.selection) {
+                    score.removeNote(note);
+                    this.currentVoice.addNote(note);
+                }
+                this.update();
+            });
             document.getElementById("voiceButtonPalette").appendChild(b);
         }
         document.getElementById("playButton").addEventListener("click", (evt) => {
@@ -158,14 +167,19 @@ export class InteractionScore {
         let circles = document.getElementsByTagName("circle");
         for (let i = 0; i < circles.length; i++) {
             let circle = circles[i];
+            circle.classList.remove("selection");
             circle.addEventListener('mousedown', (evt) => this.startDrag(evt));
             circle.addEventListener('mousemove', (evt) => this.drag(evt));
             circle.addEventListener('mouseup', (evt) => this.endDrag(evt));
         }
+        if (this.selection.length >= 1)
+            for (let note of this.selection)
+                note.svgCircle.classList.add("selection");
         document.addEventListener("keydown", (evt) => {
             if (evt.keyCode == KeyEvent.DOM_VK_DELETE) {
-                console.log(this.selectedElement);
-                this.score.removeNote(this.selectedElement);
+                for (let note of this.selection)
+                    this.score.removeNote(note);
+                this.selection = [];
                 this.update();
             }
         });
@@ -173,21 +187,32 @@ export class InteractionScore {
         document.getElementById("svgBackground").addEventListener('mouseup', (evt) => this.endDrag(evt));
         document.getElementById("svgBackground").addEventListener("click", (evt) => {
             console.log("click");
-            let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, Layout.getPitch(evt.y));
-            this.selectedElement = note;
-            this.currentVoice.addNote(note);
+            if (this.selection.length > 0) {
+                this.selection = [];
+            }
+            else {
+                let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, Layout.getPitch(evt.y));
+                this.currentVoice.addNote(note);
+            }
             this.update();
         });
     }
     startDrag(evt) {
         this.dragOccurred = false;
-        this.draggedElement = evt.target.note;
-        this.selectedElement = evt.target.note;
+        let target = evt.target;
+        let note = evt.target.note;
+        this.draggedElement = note;
+        if (this.selection.indexOf(note) < 0) {
+            if (evt.ctrlKey)
+                this.selection.push(note);
+            else
+                this.selection = [note];
+        }
         if (this.draggedElement == null)
             throw "error";
         this.offset = { x: evt.clientX, y: evt.clientY };
-        this.offset.x -= parseFloat(evt.target.getAttributeNS(null, "cx"));
-        this.offset.y -= parseFloat(evt.target.getAttributeNS(null, "cy"));
+        this.offset.x -= parseFloat(target.getAttributeNS(null, "cx"));
+        this.offset.y -= parseFloat(target.getAttributeNS(null, "cy"));
     }
     askUpdate() {
         if (!this.updateAsked) {
@@ -205,7 +230,7 @@ export class InteractionScore {
         }
     }
     endDrag(evt) {
-        if (!this.dragOccurred)
+        if (!this.dragOccurred && !evt.ctrlKey)
             this.draggedElement.toggle();
         if (this.draggedElement != null)
             this.update();

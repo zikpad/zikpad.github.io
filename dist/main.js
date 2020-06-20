@@ -1,3 +1,4 @@
+import { Lilypond } from './src/Lilypond.js';
 //import Vex from 'vexflow';
 //const VF = Vex.Flow;
 // Create an SVG renderer and attach it to the DIV element named "vf".
@@ -7,18 +8,27 @@ import { Layout } from "./src/Layout.js";
 //const { ipcRenderer } = require('electron')
 //const { ipcRenderer } = require('electron')
 window.onload = load;
+function resize() {
+    document.getElementById("svg-wrapper").style.height = (window.innerHeight - document.getElementById("palette").clientHeight - 16).toString();
+}
+let score = new Score();
 function load() {
     document.getElementById("svg").setAttribute("height", Layout.HEIGHT.toString());
-    let score = new Score();
-    document.getElementById("clear").addEventListener("click", load);
     document.getElementById("lilypond").addEventListener("click", () => document.getElementById("lilypond").select());
     new InteractionScore(score);
-    //https://ourcodeworld.com/articles/read/286/how-to-execute-a-python-script-and-retrieve-output-data-and-errors-in-node-js
-    //-> does not work
-    //https://blog.logrocket.com/electron-ipc-response-request-architecture-with-typescript/
-    /*
-      document.getElementById("validate").addEventListener("click", () => {
-        KeyBoardTyping.write((<HTMLInputElement>document.getElementById("lilypond")).value);
-    });*/
+    window.onresize = resize;
+    resize();
+    try {
+        const ipc = require('electron').ipcRenderer;
+        ipc.on("new", () => load());
+        ipc.on("open", (evt, data) => {
+            load();
+            Lilypond.getScore(score, data);
+            new InteractionScore(score);
+        });
+        ipc.on("save", () => ipc.send("save", Lilypond.getCode(score)));
+    }
+    catch (e) {
+    }
 }
 //# sourceMappingURL=main.js.map

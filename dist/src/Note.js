@@ -73,18 +73,24 @@ export class Note {
     get y() {
         return Layout.getY(this.pitch);
     }
-    getPitchName() {
-        let octave = 0;
-        switch (this.pitch % 7) {
-            case 0: return "c";
-            case 1: return "d";
-            case 2: return "e";
-            case 3: return "f";
-            case 4: return "g";
-            case 5: return "a";
-            case 6: return "b";
-        }
-        return "e";
+    get pitchName() {
+        let f = () => {
+            let i = this.pitch % 7;
+            if (i < 0)
+                i += 7;
+            switch (i) {
+                case 0: return "c";
+                case 1: return "d";
+                case 2: return "e";
+                case 3: return "f";
+                case 4: return "g";
+                case 5: return "a";
+                case 6: return "b";
+            }
+            return "e";
+        };
+        let octave = Math.floor(this.pitch / 7) + 1;
+        return f() + ((octave >= 0) ? "'".repeat(octave) : ",".repeat(-octave));
     }
 }
 //# sourceMappingURL=Note.js.map

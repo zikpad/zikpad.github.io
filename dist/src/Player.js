@@ -5,9 +5,8 @@ export class Player {
         this.t = 0;
         this.sounds = [];
         this.score = score;
-        for (let i in this.score.voices) {
+        for (let i in this.score.voices)
             this.sounds[i] = new Sounds();
-        }
         this._loop();
     }
     _loop() {
@@ -29,7 +28,6 @@ export class Player {
                 if (!note.isSilence())
                     this.sounds[i].noteOn(note.midiPitch, 128);
         }
-        //requestAnimationFrame(() => this._loop());
         setTimeout(() => this._loop(), DELAYMS);
     }
     stop() {

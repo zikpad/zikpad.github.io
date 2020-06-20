@@ -54,10 +54,10 @@ function getTimbrePiano() {
 }
 function getTimbreClarinet() {
     let timbre = new Timbre();
-    timbre.addWaveBuffer(440, "BbClarinet.ff.A3.ogg");
-    timbre.addWaveBuffer(880, "BbClarinet.ff.A4.ogg");
-    timbre.addWaveBuffer(880 * 2, "BbClarinet.ff.A5.ogg");
-    timbre.addWaveBuffer(880 * 4, "BbClarinet.ff.A6.ogg");
+    timbre.addWaveBuffer(440, "sounds/BbClarinet.ff.A3.ogg");
+    timbre.addWaveBuffer(880, "sounds/BbClarinet.ff.A4.ogg");
+    timbre.addWaveBuffer(880 * 2, "sounds/BbClarinet.ff.A5.ogg");
+    timbre.addWaveBuffer(880 * 4, "sounds/BbClarinet.ff.A6.ogg");
     return timbre;
 }
 function getFrequencyTempered(midiNote, velocity) {
@@ -69,8 +69,6 @@ export class Sounds {
         this.oscillator = {};
     }
     noteOn(midiNote, velocity) {
-        console.log("noteOn");
-        //this.stopOscillator(midiNote);
         let frequency = getFrequencyTempered(midiNote, velocity);
         //velocity = getVelocity(midiNote, velocity);
         let timbre = getTimbre(midiNote, velocity);

@@ -1,86 +1,80 @@
-import { Layout } from "./Layout.js";
-var Lilypond = /** @class */ (function () {
-    function Lilypond() {
-    }
-    Lilypond.getLilypond = function (score) {
-        score.notes.sort(function (n1, n2) { return n1.x - n2.x; });
-        var timeSteps = getTimeSteps(score);
-        computeTime(timeSteps);
-        var s = "";
-        for (var i = 0; i < timeSteps.length; i++) {
-            s += timeSteps[i].getPitchs();
-            if (i < timeSteps.length - 1)
-                s += getDurationInfo(timeSteps[i + 1].t - timeSteps[i].t);
-            else
-                s += getDurationInfo(1 - timeSteps[i].t);
-            s += " ";
+import { Note } from "./Note.js";
+export class Lilypond {
+    static lilyPitchToPitch(s) {
+        s = s.trim();
+        let r = 0;
+        switch (s[0]) {
+            case "c":
+                r = 0;
+                break;
+            case "d":
+                r = 1;
+                break;
+            case "e":
+                r = 2;
+                break;
+            case "f":
+                r = 3;
+                break;
+            case "g":
+                r = 4;
+                break;
+            case "a":
+                r = 5;
+                break;
+            case "b": r = 6;
         }
-        return s;
-    };
-    return Lilypond;
-}());
-export { Lilypond };
-function getDurationInfo(dt) {
-    if (dt < 0.25 / 2)
-        return "8";
-    else if (dt < 0.25)
-        return "4";
-    else if (dt < 0.5)
-        return "2";
-    else
-        return "1";
-}
-var TimeStep = /** @class */ (function () {
-    function TimeStep(note) {
-        this.t = undefined;
-        this.x = note.x;
-        this.notes = [note];
+        if (s.length == 1)
+            return r - 7;
+        else if (s[1] == "'")
+            return r - 7 + 7 * (s.length - 1);
+        else if (s[1] == ",")
+            return r - 7 - 7 * (s.length - 1);
+        alert("aïe");
+        return -1000;
     }
-    TimeStep.prototype.getPitchs = function () {
-        if (this.notes.length > 1) {
-            var s = "<";
-            for (var _i = 0, _a = this.notes; _i < _a.length; _i++) {
-                var note = _a[_i];
-                s += note.getPitchName() + " ";
-            }
-            s += ">";
-            return s;
-        }
-        else
-            return this.notes[0].getPitchName();
-    };
-    return TimeStep;
-}());
-function getTimeSteps(score) {
-    var timeSteps = [];
-    var previousNote = undefined;
-    for (var _i = 0, _a = score.notes; _i < _a.length; _i++) {
-        var note = _a[_i];
-        if (previousNote) {
-            if (Math.abs(note.x - previousNote.x) < 2 * Layout.NOTERADIUS)
-                timeSteps[timeSteps.length - 1].notes.push(note);
-            else {
-                previousNote = note;
-                timeSteps.push(new TimeStep(note));
+    static getScore(score, lilypond) {
+        let iVoice = 0;
+        let lines = lilypond.split("\n");
+        for (let line of lines) {
+            if (line.startsWith("%ZIKPAD")) {
+                let el = line.split(" ");
+                if (el[1] == "voice") {
+                    iVoice = parseInt(el[2]);
+                }
+                else {
+                    let x = parseInt(el[1]);
+                    let note = new Note(x, Lilypond.lilyPitchToPitch(el[2]));
+                    if (el[3] != undefined)
+                        note.toggle();
+                    score.voices[iVoice].addNote(note);
+                }
             }
         }
-        else {
-            timeSteps.push(new TimeStep(note));
-            previousNote = note;
+        score.update();
+    }
+    static getCode(score) {
+        let lines = [];
+        for (let i in score.voices) {
+            for (let note of score.voices[i].notes) {
+                if (note.isSilence())
+                    lines.push(`%ZIKPAD ${note.x} ${note.pitchName} silence`);
+                else
+                    lines.push(`%ZIKPAD ${note.x} ${note.pitchName}`);
+            }
         }
-    }
-    return timeSteps;
-}
-function computeTime(timeSteps) {
-    if (timeSteps.length == 0)
-        return;
-    for (var _i = 0, timeSteps_1 = timeSteps; _i < timeSteps_1.length; _i++) {
-        var ts = timeSteps_1[_i];
-        ts.x -= timeSteps[0].x;
-    }
-    for (var _a = 0, timeSteps_2 = timeSteps; _a < timeSteps_2.length; _a++) {
-        var ts = timeSteps_2[_a];
-        ts.t = ts.x / Layout.WIDTH;
+        return lines.join("\n");
     }
 }
+function test() {
+    if (Lilypond.lilyPitchToPitch("e") != 2 - 7)
+        alert("aïe");
+    if (Lilypond.lilyPitchToPitch("e ") != 2 - 7)
+        alert("aïe");
+    if (Lilypond.lilyPitchToPitch("e'") != 2)
+        alert("aïe");
+    if (Lilypond.lilyPitchToPitch("e''") != 2 + 7)
+        alert("aïe");
+}
+test();
 //# sourceMappingURL=Lilypond.js.map

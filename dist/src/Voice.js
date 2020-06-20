@@ -72,12 +72,12 @@ export class TimeStep {
         if (this.notes.length > 1) {
             let s = "<";
             for (let note of this.notes)
-                s += note.getPitchName() + " ";
+                s += note.pitchName + " ";
             s += ">";
             return s;
         }
         else
-            return this.notes[0].getPitchName();
+            return this.notes[0].pitchName;
     }
     set duration(d) {
         this._duration = d;
