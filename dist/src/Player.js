@@ -25,12 +25,18 @@ export class Player {
             if (notes.length > 0)
                 this.sounds[i].stop();
             for (let note of notes)
-                if (!note.isSilence())
+                if (!note.isSilence() || note.svgCircle.classList.contains("played")) {
                     this.sounds[i].noteOn(note.midiPitch, 128);
+                    note.svgCircle.classList.add("played");
+                }
         }
         setTimeout(() => this._loop(), DELAYMS);
     }
     stop() {
+        let circles = document.getElementsByTagName("circle");
+        for (let i = 0; i < circles.length; i++) {
+            circles[i].classList.remove("played");
+        }
         this.stopped = true;
     }
 }
