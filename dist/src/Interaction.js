@@ -84,7 +84,7 @@ export class InteractionScore {
         this.dragCopyMade = false;
         this.draggedNote = evt.target.note;
         //click on a selected note
-        if (this.draggedNote && !(this.dragOccurred) && this.selection.has(this.draggedNote)) {
+        if (this.draggedNote && !(this.dragOccurred) && (this.selection.has(this.draggedNote) && this.selection.size == 1)) {
             this.draggedNote.toggle();
         }
         //click on a non-selected note
