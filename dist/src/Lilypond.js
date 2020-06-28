@@ -1,37 +1,45 @@
+import { Pitch } from './Pitch.js';
 import { Note } from "./Note.js";
 export class Lilypond {
+    static lilypondPitchNameToValue(s) {
+        switch (s) {
+            case "c": return 0;
+            case "d": return 1;
+            case "e": return 2;
+            case "f": return 3;
+            case "g": return 4;
+            case "a": return 5;
+            case "b": return 6;
+            default: throw "error";
+        }
+    }
+    static lilyAccidentalToNumber(s) {
+        if (s.startsWith("isis"))
+            return 2;
+        if (s.startsWith("eses"))
+            return -2;
+        if (s.startsWith("is"))
+            return 1;
+        if (s.startsWith("es"))
+            return -1;
+        return 0;
+    }
+    static lilyOctaveShiftToNumber(s) {
+        if (s.length == 0)
+            return -7;
+        else if (s[0] == "'")
+            return -7 + 7 * s.length;
+        else if (s[1] == ",")
+            return -7 - 7 * s.length;
+        throw "aïe";
+    }
     static lilyPitchToPitch(s) {
         s = s.trim();
-        let r = 0;
-        switch (s[0]) {
-            case "c":
-                r = 0;
-                break;
-            case "d":
-                r = 1;
-                break;
-            case "e":
-                r = 2;
-                break;
-            case "f":
-                r = 3;
-                break;
-            case "g":
-                r = 4;
-                break;
-            case "a":
-                r = 5;
-                break;
-            case "b": r = 6;
-        }
-        if (s.length == 1)
-            return r - 7;
-        else if (s[1] == "'")
-            return r - 7 + 7 * (s.length - 1);
-        else if (s[1] == ",")
-            return r - 7 - 7 * (s.length - 1);
-        alert("aïe");
-        return -1000;
+        let v = Lilypond.lilypondPitchNameToValue(s[0]);
+        s = s.substr(1);
+        let a = Lilypond.lilyAccidentalToNumber(s);
+        s = s.substr(Math.abs(a * 2));
+        return new Pitch(v + this.lilyOctaveShiftToNumber(s), a);
     }
     static getScore(score, lilypond) {
         let iVoice = 0;
@@ -53,7 +61,7 @@ export class Lilypond {
         }
         score.update();
     }
-    static getDurationLilypond(duration) {
+    static getDurationBasisLilypond(duration) {
         if (duration >= 1)
             return "1";
         if (duration >= 0.5)
@@ -74,28 +82,19 @@ export class Lilypond {
             }
             else {
                 s += voice.timeSteps[i].getPitchs();
-                s += Lilypond.getDurationLilypond(voice.timeSteps[i].duration);
+                s += Lilypond.getDurationBasisLilypond(voice.timeSteps[i].duration);
                 if (voice.timeSteps[i].isDot())
                     s += ".";
                 s += " ";
                 i++;
             }
         }
-        /* s += " ";
-         for (let timestep of this.score.timeSteps) {
-             s += `${timestep._duration} `;
-         }*/
         return s;
     }
-    static getVoiceName(i) {
-        let j = parseInt(i);
-        //alert(j)
-        //alert(String.fromCharCode(65+j))
-        return "voice" + String.fromCharCode(65 + j);
-    }
+    static getVoiceName(i) { return "voice" + String.fromCharCode(65 + parseInt(i)); }
     static getCode(score) {
-        let lines = [];
-        for (let i in score.voices)
+        const lines = [];
+        for (const i in score.voices)
             if (!score.voices[i].isEmpty()) {
                 lines.push(`%ZIKPAD voice ${i}`);
                 for (let note of score.voices[i].notes) {
@@ -144,7 +143,7 @@ export class Lilypond {
             return "";
         let s = 0;
         for (let note of voice.notes) {
-            s += note.pitch;
+            s += note.pitch.value;
         }
         if (s >= 0)
             return "";
@@ -153,14 +152,18 @@ export class Lilypond {
     }
 }
 function test() {
-    if (Lilypond.lilyPitchToPitch("e") != 2 - 7)
+    if (Lilypond.lilyPitchToPitch("e").value != 2 - 7)
         alert("aïe");
-    if (Lilypond.lilyPitchToPitch("e ") != 2 - 7)
+    if (Lilypond.lilyPitchToPitch("e ").value != 2 - 7)
         alert("aïe");
-    if (Lilypond.lilyPitchToPitch("e'") != 2)
+    if (Lilypond.lilyPitchToPitch("e'").value != 2)
         alert("aïe");
-    if (Lilypond.lilyPitchToPitch("e''") != 2 + 7)
+    if (Lilypond.lilyPitchToPitch("e''").value != 2 + 7)
         alert("aïe");
+    if (Lilypond.lilyPitchToPitch("eis''").value != 2 + 7)
+        alert("aïe value wrong");
+    if (Lilypond.lilyPitchToPitch("eis''").alteration != 1)
+        alert("aïe accidental wrong");
 }
 test();
 //# sourceMappingURL=Lilypond.js.map

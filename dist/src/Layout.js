@@ -1,12 +1,15 @@
+import { Pitch } from './Pitch.js';
 let Layout = /** @class */ (() => {
     class Layout {
-        static getNoteRadius() {
-            return Layout.NOTERADIUS;
-        }
         static getY(pitch) {
-            return this.BASELINE - Layout.NOTERADIUS * pitch;
+            let v;
+            if (pitch instanceof Pitch)
+                v = pitch.value;
+            else
+                v = pitch;
+            return this.BASELINE - Layout.NOTERADIUS * v;
         }
-        static getPitch(y) {
+        static getPitchValue(y) {
             return Math.round((this.BASELINE - y) / Layout.NOTERADIUS);
         }
         static getT(x) {

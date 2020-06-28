@@ -1,9 +1,13 @@
+import { InteractionRecordingMicrophone } from './InteractionRecordingMicrophone.js';
+import { Harmony } from './Harmony.js';
+import { ContextualMenu } from './ContextualMenu.js';
 import { Player } from './Player.js';
 import { Note } from "./Note.js";
 import { Layout } from "./Layout.js";
 import { Voice } from "./Voice.js";
 import { KeyEvent } from "./KeyEvent.js";
 import { InteractionSelection } from './InteractionSelection.js';
+import { Pitch } from './Pitch.js';
 export class InteractionScore {
     constructor(score) {
         this.selection = new Set();
@@ -12,6 +16,16 @@ export class InteractionScore {
         this.player = undefined;
         this.dragCopyMade = false;
         this.interactionSelection = undefined;
+        ContextualMenu.hide();
+        this.interactionRecordingMicrophone = new InteractionRecordingMicrophone();
+        this.interactionRecordingMicrophone.onNote = (freq) => {
+            //document.getElementById("microphoneInputFreq").innerHTML = freq;
+            let pitch = Harmony.freqToPitch(freq);
+            if (this.selection.size == 1) {
+                for (let note of this.selection)
+                    note.update(note.x, pitch);
+            }
+        };
         this.score = score;
         this.currentVoice = this.score.voices[0];
         score.update();
@@ -34,17 +48,48 @@ export class InteractionScore {
         }
         document.getElementById("playButton").onclick =
             (evt) => {
+                const icon = document.getElementById("playButton").children[0];
                 if (this.player == undefined) {
-                    this.player = new Player(this.score);
-                    document.getElementById("playButton").innerHTML = "stop!";
+                    this.player = new Player(this.score, document.getElementById("svg-wrapper").scrollLeft / Layout.WIDTHONE);
+                    this.interactionRecordingMicrophone.pause();
+                    icon.classList.add("fa-stop");
+                    icon.classList.remove("fa-play");
                 }
                 else {
+                    this.interactionRecordingMicrophone.unpause();
                     this.player.stop();
                     this.player = undefined;
-                    document.getElementById("playButton").innerHTML = "play!";
+                    icon.classList.remove("fa-stop");
+                    icon.classList.add("fa-play");
                 }
             };
+        document.getElementById("delete").onclick = () => { this.actionDelete(); };
+        document.getElementById("toggle").onclick = () => { this.actionToggle(); };
+        document.getElementById("alterationUp").onclick = () => { this.actionAlterationUp(); };
+        document.getElementById("alterationDown").onclick = () => { this.actionAlterationDown(); };
         this.setup();
+    }
+    actionDelete() {
+        for (let note of this.selection)
+            this.score.removeNote(note);
+        this.selection = new Set();
+        this.update();
+        ContextualMenu.hide();
+    }
+    actionToggle() {
+        for (let note of this.selection)
+            note.toggle();
+        this.update();
+    }
+    actionAlterationUp() {
+        for (let note of this.selection)
+            note.alteration = Math.min(2, note.alteration + 1);
+        this.update();
+    }
+    actionAlterationDown() {
+        for (let note of this.selection)
+            note.alteration = Math.max(-2, note.alteration - 1);
+        this.update();
     }
     update() {
         this.score.update();
@@ -65,17 +110,19 @@ export class InteractionScore {
                 note.svgCircle.classList.add("selection");
         document.onkeydown = (evt) => {
             if (evt.keyCode == KeyEvent.DOM_VK_DELETE) {
-                for (let note of this.selection)
-                    this.score.removeNote(note);
-                this.selection = new Set();
-                this.update();
+                this.actionDelete();
             }
         };
         document.getElementById("svgBackground").onmousedown = (evt) => this.mouseDownBackground(evt);
         document.getElementById("svgBackground").onmousemove = (evt) => this.drag(evt);
         document.getElementById("svgBackground").onmouseup = (evt) => this.endDrag(evt);
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('touchforcechange', (e) => e.preventDefault(), { passive: false });
+        document.getElementById("svgBackground").addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        document.getElementById("svgBackground").addEventListener('touchforcechange', (e) => e.preventDefault(), { passive: false });
     }
     mouseDownBackground(evt) {
+        ContextualMenu.hide();
         if (this.interactionSelection == undefined)
             this.interactionSelection = new InteractionSelection(this.score, evt);
     }
@@ -83,17 +130,13 @@ export class InteractionScore {
         this.dragOccurred = false;
         this.dragCopyMade = false;
         this.draggedNote = evt.target.note;
-        //click on a selected note
-        if (this.draggedNote && !(this.dragOccurred) && (this.selection.has(this.draggedNote) && this.selection.size == 1)) {
-            this.draggedNote.toggle();
-        }
-        //click on a non-selected note
-        else if (this.draggedNote && !this.dragOccurred) {
+        if (this.draggedNote && !this.dragOccurred && (!this.selection.has(this.draggedNote))) {
             if (evt.ctrlKey)
                 this.selection = this.selection.add(this.draggedNote);
             else
                 this.selection = new Set([this.draggedNote]);
         }
+        ContextualMenu.toggle(this.selection);
         this.offset = this.getOffset(evt, this.selection);
     }
     getOffset(evt, selection) {
@@ -114,8 +157,10 @@ export class InteractionScore {
     }
     drag(evt) {
         this.dragOccurred = true;
-        if (this.interactionSelection)
+        if (this.interactionSelection) {
             this.interactionSelection.mouseMove(evt);
+            ContextualMenu.hide();
+        }
         else if (this.draggedNote) {
             evt.preventDefault();
             let coord = { x: evt.clientX, y: evt.clientY };
@@ -133,8 +178,9 @@ export class InteractionScore {
             for (let note of this.selection) {
                 let dx = coord.x - this.offset.get(note).x;
                 let dy = coord.y - this.offset.get(note).y;
-                note.update(dx, Layout.getPitch(dy));
+                note.update(dx, new Pitch(Layout.getPitchValue(dy), 0));
             }
+            ContextualMenu.hide();
             this.askUpdate();
         }
     }
@@ -147,6 +193,7 @@ export class InteractionScore {
             }
             else
                 this.selection = new Set(this.interactionSelection.getSelection());
+            ContextualMenu.show(this.selection);
             this.interactionSelection = undefined;
         }
         //click outside a note
@@ -155,9 +202,10 @@ export class InteractionScore {
             if (this.selection.size > 0)
                 this.selection = new Set();
             else {
-                let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, Layout.getPitch(evt.y));
+                let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, new Pitch(Layout.getPitchValue(evt.y), 0));
                 this.currentVoice.addNote(note);
             }
+            ContextualMenu.hide();
         }
         this.interactionSelection = null;
         this.draggedNote = null;

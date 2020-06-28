@@ -8,6 +8,7 @@ export class InteractionSelection {
     }
     mouseMove(evt) {
         const THRESHOLD = 4;
+        //if there is no rectangle but the mouse moved enough then setup a rectangle
         if ((this.svgRectangle == undefined) &&
             ((Math.abs(evt.clientX - this.evtBegin.clientX) > THRESHOLD) || (Math.abs(evt.clientY - this.evtBegin.clientY) > THRESHOLD))) {
             this.svgRectangle = Drawing.rectangle(0, 0, 0, 0);
@@ -28,9 +29,13 @@ export class InteractionSelection {
             this.svgRectangle.setAttribute("height", "" + this.height);
         }
     }
-    isActive() {
-        return (this.svgRectangle != undefined);
-    }
+    /**
+     * @returns true iff the selection tool is active (i.e. there is a rectangle)
+     */
+    isActive() { return (this.svgRectangle != undefined); }
+    /**
+     * @returns the notes in the rectangle if there is one
+     */
     getSelection() {
         if (this.svgRectangle) {
             let s = [];

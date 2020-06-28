@@ -7,22 +7,16 @@ export class Analyzer {
         this._draw();
     }
     computeTime(timeSteps) {
-        function getEnd(t) {
-            return Math.floor(t) + 1;
-        }
+        function getEnd(t) { return Math.floor(t) + 1; }
         if (timeSteps.length == 0)
             return;
-        for (let ts of timeSteps) {
+        for (let ts of timeSteps)
             ts.t = Layout.getT(ts.x);
-        }
-        let t = 0;
         for (let i = 0; i < timeSteps.length; i++) {
             if (i < timeSteps.length - 1)
                 timeSteps[i].duration = getDuration(timeSteps[i + 1].t - timeSteps[i].t);
             else
                 timeSteps[i].duration = getDuration(getEnd(timeSteps[i].t) - timeSteps[i].t);
-            timeSteps[i].t = t;
-            t += timeSteps[i].duration;
         }
     }
     _draw() {
@@ -50,6 +44,20 @@ export class Analyzer {
             if (this.voice.isTrioletStartingFrom(i))
                 Drawing.text((this.voice.timeSteps[i].x + this.voice.timeSteps[i + 2].x) / 2, this.voice.timeSteps[i].yRythm - 2, "3");
         }
+        let drawExtraLine = (x, i) => {
+            const y = Layout.getY(i);
+            const FACT = 1.8;
+            Drawing.line(x - Layout.NOTERADIUS * FACT, y, x + Layout.NOTERADIUS * FACT, y);
+        };
+        for (let note of this.voice.notes)
+            if (!note.isSilence()) {
+                if (note.pitch.value == 0)
+                    drawExtraLine(note.x, 0);
+                for (let i = -10; i >= note.pitch.value; i -= 2)
+                    drawExtraLine(note.x, i);
+                for (let i = 10; i <= note.pitch.value; i += 2)
+                    drawExtraLine(note.x, i);
+            }
     }
 }
 function getDuration(dt) {

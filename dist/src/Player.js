@@ -1,12 +1,12 @@
-import { Sounds } from './Sound.js';
+import { VoiceSounds } from './Sound.js';
 export class Player {
-    constructor(score) {
+    constructor(score, startingTime) {
         this.stopped = false;
-        this.t = 0;
         this.sounds = [];
         this.score = score;
+        this.t = startingTime;
         for (let i in this.score.voices)
-            this.sounds[i] = new Sounds();
+            this.sounds[i] = new VoiceSounds();
         this._loop();
     }
     _loop() {
@@ -26,7 +26,7 @@ export class Player {
                 this.sounds[i].stop();
             for (let note of notes)
                 if (!note.isSilence() || note.svgCircle.classList.contains("played")) {
-                    this.sounds[i].noteOn(note.midiPitch, 128);
+                    this.sounds[i].noteOn(note.pitch.midiPitch, 128);
                     note.svgCircle.classList.add("played");
                 }
         }

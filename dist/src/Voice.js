@@ -19,7 +19,6 @@ let Voice = /** @class */ (() => {
             return result;
         }
         removeNote(note) {
-            note.delete();
             const index = this.notes.indexOf(note);
             if (index > -1) {
                 this.notes.splice(index, 1);
@@ -97,9 +96,9 @@ export class TimeStep {
         return s / this.notes.length;
     }
     get xLine() {
-        let x = this.x;
-        let minX = 1000;
-        let maxX = -1000;
+        const x = this.x;
+        let minX = 1000000;
+        let maxX = -1000000;
         for (let note of this.notes) {
             minX = Math.min(note.x, minX);
             maxX = Math.max(note.x, maxX);
@@ -110,14 +109,14 @@ export class TimeStep {
             return x;
     }
     get yDown() {
-        let y = -1000;
+        let y = -100000;
         for (let note of this.notes) {
             y = Math.max(y, Layout.getY(note.pitch));
         }
         return y;
     }
     get yTop() {
-        let y = 1000;
+        let y = 100000;
         for (let note of this.notes) {
             y = Math.min(y, Layout.getY(note.pitch));
         }
