@@ -15,15 +15,15 @@ export class InteractionSelection {
             this.svgRectangle.classList.add("selectionRectangle");
         }
         if (this.svgRectangle) {
-            let x1 = Math.min(this.evtBegin.clientX, evt.clientX) + document.getElementById("svg-wrapper").scrollLeft;
+            let x1 = Math.min(this.evtBegin.clientX, evt.clientX) + 1 * document.getElementById("svg-wrapper").scrollLeft;
             let y1 = Math.min(this.evtBegin.clientY, evt.clientY);
-            let x2 = Math.max(this.evtBegin.clientX, evt.clientX) + document.getElementById("svg-wrapper").scrollLeft;
+            let x2 = Math.max(this.evtBegin.clientX, evt.clientX) + 1 * document.getElementById("svg-wrapper").scrollLeft;
             let y2 = Math.max(this.evtBegin.clientY, evt.clientY);
             this.x = x1;
             this.y = y1;
             this.width = (x2 - x1);
             this.height = (y2 - y1);
-            this.svgRectangle.setAttribute("x", "" + this.x);
+            this.svgRectangle.setAttribute("x", "" + x1);
             this.svgRectangle.setAttribute("y", "" + this.y);
             this.svgRectangle.setAttribute("width", "" + this.width);
             this.svgRectangle.setAttribute("height", "" + this.height);

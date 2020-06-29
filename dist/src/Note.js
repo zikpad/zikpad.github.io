@@ -30,7 +30,6 @@ export class Note {
     set alteration(alt) {
         this.pitch.alteration = alt;
         this.svtTextAlteration.textContent = alterationToSymbol(this.alteration);
-        console.log(this._alteration);
     }
     ;
     draw() {
@@ -72,6 +71,7 @@ export class Note {
         this.svgCircle.setAttribute('cy', this.y.toString());
         this.svtTextAlteration.setAttribute('x', (this.x - Layout.NOTERADIUS * 2).toString());
         this.svtTextAlteration.setAttribute('y', (this.y + Layout.NOTERADIUS / 2).toString());
+        this.svtTextAlteration.textContent = alterationToSymbol(this.alteration);
     }
     get y() { return Layout.getY(this.pitch); }
     get pitchName() {

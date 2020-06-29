@@ -31,13 +31,14 @@ export class ContextualMenu {
             document.getElementById("toggle").style.visibility = "visible";
             document.getElementById("delete").style.visibility = "visible";
             const MENURADIUS = 40;
+            const BUTTONSIZE = 48;
             setPosition("toggle", x2 + MENURADIUS, y1 - MENURADIUS);
             setPosition("delete", x2 + MENURADIUS, y1 + MENURADIUS);
             if (selection.size == 1) {
                 document.getElementById("alterationUp").style.visibility = "visible";
                 document.getElementById("alterationDown").style.visibility = "visible";
-                setPosition("alterationUp", x1 - MENURADIUS, y1 - MENURADIUS);
-                setPosition("alterationDown", x1 - MENURADIUS, y1 + MENURADIUS);
+                setPosition("alterationUp", x1 - Layout.NOTERADIUS - MENURADIUS, y1 - MENURADIUS);
+                setPosition("alterationDown", x1 - Layout.NOTERADIUS - MENURADIUS, y1 + MENURADIUS);
             }
         }
     }

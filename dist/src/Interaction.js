@@ -15,15 +15,31 @@ export class InteractionScore {
         this.updateAsked = false;
         this.player = undefined;
         this.dragCopyMade = false;
+        this.currentX = Layout.getX(0);
         this.interactionSelection = undefined;
         ContextualMenu.hide();
         this.interactionRecordingMicrophone = new InteractionRecordingMicrophone();
+        this.interactionRecordingMicrophone.onSound = (freq) => {
+            let pitch = Harmony.freqToPitch(freq);
+            document.getElementById("microphoneInput").style.left = "" + 300;
+            if (this.selection.size == 1) {
+                for (let note of this.selection)
+                    document.getElementById("microphoneInput").style.left = "" + (note.x - Layout.NOTERADIUS);
+            }
+            if (this.selection.size == 0) {
+                document.getElementById("microphoneInput").style.left = "" + (this.currentX - Layout.NOTERADIUS);
+            }
+            document.getElementById("microphoneInput").style.top = "" + (Layout.getY(pitch) - Layout.NOTERADIUS + 2);
+        };
         this.interactionRecordingMicrophone.onNote = (freq) => {
             //document.getElementById("microphoneInputFreq").innerHTML = freq;
             let pitch = Harmony.freqToPitch(freq);
             if (this.selection.size == 1) {
                 for (let note of this.selection)
                     note.update(note.x, pitch);
+            }
+            if (this.selection.size == 0) {
+                this.currentVoice.addNote(new Note(this.currentX, pitch));
             }
         };
         this.score = score;
@@ -125,6 +141,7 @@ export class InteractionScore {
         ContextualMenu.hide();
         if (this.interactionSelection == undefined)
             this.interactionSelection = new InteractionSelection(this.score, evt);
+        this.currentX = evt.clientX;
     }
     startDrag(evt) {
         this.dragOccurred = false;

@@ -1,9 +1,12 @@
 export class MicrophoneInput {
     constructor() {
-        this._onNote = undefined;
+        this.onNote = undefined;
+        this.onSound = undefined;
+        this.onError = undefined;
         this.FFT_SIZE = 2048;
         this.BUFF_SIZE = 2048;
-        this.fftcurrentmax = 0;
+        this.TRESHOLDCOUNT = 6;
+        this.currentfreq = 0;
         this.fftcount = 0;
         this._started = false;
         this.audioInput = null;
@@ -50,8 +53,8 @@ export class MicrophoneInput {
                 this.analyserNode.getByteTimeDomainData(dataArray);
                 // draw the spectrogram
                 if (this.microphone_stream.playbackState == this.microphone_stream.PLAYING_STATE) {
-                    this.paint(dataArray);
                     this.findNote(spectrum);
+                    this.paint(dataArray);
                 }
             };
         };
@@ -72,9 +75,9 @@ export class MicrophoneInput {
             this.start();
     }
     paint(array) {
-        const BASELINE = 32;
-        const WIDTH = 64;
         let canvas = document.getElementById("microphoneInput");
+        const WIDTH = canvas.width;
+        const BASELINE = WIDTH / 2;
         let context = canvas.getContext('2d');
         context.clearRect(0, 0, WIDTH, WIDTH);
         context.beginPath();
@@ -82,55 +85,102 @@ export class MicrophoneInput {
         for (let i = 0; i < array.length / 2; i++)
             context.lineTo(i * WIDTH / (array.length / 2), BASELINE - (array[i] - 128) * WIDTH / 2 / 128);
         context.stroke();
+        let f = Math.min(this.TRESHOLDCOUNT, this.fftcount) / this.TRESHOLDCOUNT;
+        canvas.style.backgroundColor = `rgb(${255 - Math.round(255 * f)}, ${255 - Math.round(128 * f)}, ${255 - Math.round(255 * f)})`;
     }
+    /**
+     * This function is similar to https://github.com/performous/performous/blob/master/game/pitch.cc
+     * (void Analyzer::calcTones())
+     *
+     * @param spectrum
+     */
     getMainFrequency(spectrum) {
-        if (this._onNote == undefined)
-            return undefined;
-        let max = 0;
-        let imax = -1;
-        const THRESHOLD = 32;
-        const NBPEEKSMAX = 30;
-        let peeks = [];
-        let peekseval = [];
-        for (let i = 1; i < spectrum.length / 8; i++) {
-            if (spectrum[i - 1] <= spectrum[i] && spectrum[i] <= spectrum[i + 1] && spectrum[i] > THRESHOLD)
-                peeks.push(i);
+        let SPECTRUMFACTOR = 32;
+        const THRESHOLD = 600;
+        function getPeeksAndClean(spectrum) {
+            let peeks = [];
+            let peekseval = [];
+            for (let i = 1; i < spectrum.length / 2; i++) {
+                if (spectrum[i - 1] <= spectrum[i] && spectrum[i] <= spectrum[i + 1] && spectrum[i] > 0) {
+                    peeks.push(new Peek(i * SPECTRUMFACTOR));
+                }
+            }
+            for (let i = 1; i < spectrum.length / 2; i++) {
+                if (spectrum[i - 1] < spectrum[i])
+                    spectrum[i - 1] = 0;
+                if (spectrum[i - 1] > spectrum[i])
+                    spectrum[i] = 0;
+            }
+            return peeks;
         }
-        if (peeks.length > NBPEEKSMAX)
-            return undefined;
+        let peeks = getPeeksAndClean(spectrum);
+        function findPeek(spectrum, freq) {
+            let i = Math.round(freq / SPECTRUMFACTOR);
+            let best = i;
+            if (spectrum[i - 1] > spectrum[best])
+                best = i - 1;
+            if (spectrum[i + 1] > spectrum[best])
+                best = i + 1;
+            return spectrum[best];
+        }
         for (let j = 0; j < peeks.length; j++) {
-            peekseval[j] = spectrum[peeks[j]] + spectrum[2 * peeks[j]] + spectrum[3 * peeks[j]] + spectrum[4 * peeks[j]];
+            let bestScore = 0;
+            let bestDivFond = 1;
+            for (let divFond = 2; j / divFond > 1; divFond++) {
+                //test the fondamental to be peeks[j].freq / divFond
+                let score = 0;
+                if (findPeek(spectrum, peeks[j].freq / divFond) != 0) {
+                    for (let n = 1; n < divFond && n < 8; n++) {
+                        score += findPeek(spectrum, peeks[j].freq * n / divFond);
+                    }
+                }
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestDivFond = divFond;
+                }
+            }
+            peeks[j].divFond = bestDivFond;
+            peeks[j].score = bestScore;
         }
         let jmax = 0;
+        let max = 0;
         for (let j = 0; j < peeks.length; j++) {
-            if (max < peekseval[j]) {
-                max = peekseval[j];
+            if (max < peeks[j].score) {
+                max = peeks[j].score;
                 jmax = j;
             }
         }
-        imax = peeks[jmax];
-        const TRESHOLDCOUNT = 1;
-        if (max > THRESHOLD && Math.abs(this.fftcurrentmax - imax) < 3)
+        let freq = peeks[jmax].freqFond;
+        // document.getElementById("message").innerHTML = `force: ${max} freq: ${Math.round(freq)} count: ${this.fftcount}`;
+        if (max > THRESHOLD && Math.abs(this.currentfreq - freq) < 30) {
             this.fftcount++;
+            this.onSound(this.currentfreq);
+            this.currentfreq = 0.5 * this.currentfreq + 0.5 * freq;
+        }
         else {
-            this.fftcurrentmax = imax;
+            this.currentfreq = freq;
             this.fftcount = 0;
         }
-        if (this.fftcount >= TRESHOLDCOUNT)
-            return imax * 8; //this.BUFF_SIZE / this.FFT_SIZE;
+        if (this.fftcount >= this.TRESHOLDCOUNT)
+            return this.currentfreq;
         else
             return undefined;
     }
     findNote(spectrum) {
         let freq = this.getMainFrequency(spectrum);
-        if (freq == undefined || freq < 50)
-            document.getElementById("microphoneInput").classList.remove("microphoneInputGood");
+        if (freq == undefined || freq < 50) { }
         else {
-            document.getElementById("microphoneInput").classList.add("microphoneInputGood");
-            this._onNote(freq);
+            this.onNote(freq);
         }
     }
-    set onNote(callBack) { this._onNote = callBack; }
-    set onError(callBack) { this._onError = callBack; }
+}
+class Peek {
+    constructor(freq) {
+        this.divFond = 1;
+        this.freq = freq;
+    }
+    get freqFond() {
+        return this.freq / this.divFond;
+    }
 }
 //# sourceMappingURL=MicrophoneInput.js.map

@@ -2,12 +2,13 @@ import { Pitch } from './Pitch.js';
 export class Harmony {
     static freqToPitch(freq) {
         const FREQBASE = 440;
-        const midiPitch = 2 + Math.round(Math.log2(Math.pow(freq / FREQBASE, 12)));
+        const midiPitch = 2 + Math.round(Math.log2(Math.pow(freq * Math.pow(2, 1 / 30) / FREQBASE, 12)));
+        //* Math.pow(2, 1/30) => for making the frequency higher
         let octave = Math.floor(midiPitch / 12);
         let midiPitchM = midiPitch % 12;
         if (midiPitchM < 0)
             midiPitchM = midiPitchM + 12;
-        return new Pitch(Harmony.midiPitchMTopitchM(midiPitchM) + octave * 7, 0);
+        return new Pitch(Harmony.midiPitchMTopitchM(midiPitchM) + octave * 7, Harmony.midiPitchMToAccidental(midiPitchM));
     }
     static midiPitchMTopitchM(midiPitchM) {
         switch (midiPitchM) {
@@ -25,6 +26,9 @@ export class Harmony {
             case 11: return 6;
             default: alert(midiPitchM);
         }
+    }
+    static midiPitchMToAccidental(midiPitchM) {
+        return [1, 3, 6, 8, 10].indexOf(midiPitchM) >= 0 ? 1 : 0;
     }
 }
 //# sourceMappingURL=Harmony.js.map
