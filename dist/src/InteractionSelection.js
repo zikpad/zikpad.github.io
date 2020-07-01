@@ -46,7 +46,8 @@ export class InteractionSelection {
                         s.push(note);
                 }
             console.log(s.length);
-            document.getElementById("svg").removeChild(this.svgRectangle);
+            if (document.getElementById("svg").contains(this.svgRectangle))
+                document.getElementById("svg").removeChild(this.svgRectangle);
             return s;
         }
         else
