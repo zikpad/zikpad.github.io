@@ -1,3 +1,7 @@
+import { CommandToggleNote } from './CommandToggleNote.js';
+import { CommandUpdateNote } from './CommandUpdateNote.js';
+import { CommandAddNote } from './CommandAddNote.js';
+import { UndoRedo } from './UndoRedo.js';
 import { InteractionRecordingMicrophone } from './InteractionRecordingMicrophone.js';
 import { Harmony } from './Harmony.js';
 import { ContextualMenu } from './ContextualMenu.js';
@@ -8,10 +12,15 @@ import { Voice } from "./Voice.js";
 import { KeyEvent } from "./KeyEvent.js";
 import { InteractionSelection } from './InteractionSelection.js';
 import { Pitch } from './Pitch.js';
+import { CommandGroup } from './CommandGroup.js';
+import { CommandChangeVoiceNote } from './CommandChangeVoiceNote.js';
+import { CommandDeleteNote } from './CommandDeleteNote.js';
 export class InteractionScore {
     constructor(score) {
+        this.undoRedo = new UndoRedo();
         this.selection = new Set();
         this.dragOccurred = false;
+        this.dragCommand = undefined;
         this.updateAsked = false;
         this.player = undefined;
         this.dragCopyMade = false;
@@ -30,10 +39,10 @@ export class InteractionScore {
             //document.getElementById("microphoneInputFreq").innerHTML = freq;
             let pitch = Harmony.freqToPitch(freq);
             if (this.selection.size == 0)
-                this.currentVoice.addNote(new Note(this.interactionRecordingMicrophone.x, pitch));
+                this.do(new CommandAddNote(this.currentVoice, new Note(this.interactionRecordingMicrophone.x, pitch)));
             else if (this.selection.size == 1)
                 for (let note of this.selection)
-                    note.update(note.x, pitch);
+                    this.do(new CommandUpdateNote(note, note.x, pitch));
             this.update();
         };
         this.score = score;
@@ -48,11 +57,11 @@ export class InteractionScore {
             b.style.backgroundColor = Voice.voiceColors[i];
             b.onclick = () => {
                 this.currentVoice = score.voices[i];
+                let command = new CommandGroup();
                 for (let note of this.selection) {
-                    score.removeNote(note);
-                    this.currentVoice.addNote(note);
+                    command.commands.push(new CommandChangeVoiceNote(note, this.currentVoice));
                 }
-                this.update();
+                this.do(command);
             };
             document.getElementById("voiceButtonPalette").appendChild(b);
         }
@@ -79,27 +88,35 @@ export class InteractionScore {
         document.getElementById("alterationDown").onclick = () => { this.actionAlterationDown(); };
         this.setup();
     }
+    undo() { this.undoRedo.undo(); this.update(); ContextualMenu.hide(); }
+    redo() { this.undoRedo.redo(); this.update(); ContextualMenu.hide(); }
+    do(command) { this.undoRedo.do(command); this.update(); ContextualMenu.hide(); }
     actionDelete() {
+        let command = new CommandGroup();
         for (let note of this.selection)
-            this.score.removeNote(note);
+            command.commands.push(new CommandDeleteNote(note));
+        this.do(command);
         this.selection = new Set();
         this.update();
         ContextualMenu.hide();
     }
     actionToggle() {
+        let command = new CommandGroup();
         for (let note of this.selection)
-            note.toggle();
-        this.update();
+            command.commands.push(new CommandToggleNote(note));
+        this.do(command);
     }
     actionAlterationUp() {
+        let command = new CommandGroup();
         for (let note of this.selection)
-            note.alteration = Math.min(2, note.alteration + 1);
-        this.update();
+            command.commands.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.min(2, note.alteration + 1))));
+        this.do(command);
     }
     actionAlterationDown() {
+        let command = new CommandGroup();
         for (let note of this.selection)
-            note.alteration = Math.max(-2, note.alteration - 1);
-        this.update();
+            command.commands.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.max(-2, note.alteration - 1))));
+        this.do(command);
     }
     update() {
         this.score.update();
@@ -143,6 +160,7 @@ export class InteractionScore {
         this.dragOccurred = false;
         this.dragCopyMade = false;
         this.draggedNote = evt.target.note;
+        this.dragCommand = undefined;
         if (this.draggedNote && !this.dragOccurred && (!this.selection.has(this.draggedNote))) {
             if (evt.ctrlKey)
                 this.selection = this.selection.add(this.draggedNote);
@@ -177,21 +195,44 @@ export class InteractionScore {
         else if (this.draggedNote) {
             evt.preventDefault();
             let coord = { x: evt.clientX, y: evt.clientY };
-            if (evt.ctrlKey && !this.dragCopyMade) {
-                let newSelection = [];
-                for (let note of this.selection) {
-                    let newNote = new Note(note.x, note.pitch);
-                    newSelection.push(newNote);
-                    this.currentVoice.addNote(newNote);
+            if (this.dragCommand == undefined) {
+                if (evt.ctrlKey) {
+                    this.dragCommand = new CommandGroup();
+                    let newSelection = [];
+                    for (let note of this.selection) {
+                        let newNote = new Note(note.x, note.pitch);
+                        newSelection.push(newNote);
+                        this.dragCommand.commands.push(new CommandAddNote(note.voice, newNote));
+                    }
+                    this.selection = new Set(newSelection);
+                    this.offset = this.getOffset(evt, this.selection);
+                    this.dragCopyMade = true;
+                    for (let note of this.selection) {
+                        let dx = coord.x - this.offset.get(note).x;
+                        let dy = coord.y - this.offset.get(note).y;
+                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, new Pitch(Layout.getPitchValue(dy), 0)));
+                    }
                 }
-                this.selection = new Set(newSelection);
-                this.offset = this.getOffset(evt, this.selection);
-                this.dragCopyMade = true;
+                else {
+                    this.dragCommand = new CommandGroup();
+                    for (let note of this.selection) {
+                        let dx = coord.x - this.offset.get(note).x;
+                        let dy = coord.y - this.offset.get(note).y;
+                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, new Pitch(Layout.getPitchValue(dy), 0)));
+                    }
+                }
+                this.do(this.dragCommand);
             }
+            let i = 0;
             for (let note of this.selection) {
                 let dx = coord.x - this.offset.get(note).x;
                 let dy = coord.y - this.offset.get(note).y;
+                let command = (this.dragCommand.commands.length == this.selection.size) ?
+                    this.dragCommand.commands[i] :
+                    this.dragCommand.commands[this.selection.size + i];
                 note.update(dx, new Pitch(Layout.getPitchValue(dy), 0));
+                command.update(dx, new Pitch(Layout.getPitchValue(dy), 0));
+                i++;
             }
             ContextualMenu.hide();
             this.askUpdate();
@@ -216,7 +257,7 @@ export class InteractionScore {
                 this.selection = new Set();
             else if (!this.interactionRecordingMicrophone.isActive()) {
                 let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, new Pitch(Layout.getPitchValue(evt.y), 0));
-                this.currentVoice.addNote(note);
+                this.do(new CommandAddNote(this.currentVoice, note));
             }
             ContextualMenu.hide();
         }

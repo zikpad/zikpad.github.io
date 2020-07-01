@@ -12,10 +12,11 @@ function alterationToSymbol(a) {
 }
 export class Note {
     constructor(x, pitch) {
+        this.x = x;
+        this.pitch = pitch;
         this.silence = false;
         this.color = "black";
         this._alteration = 0;
-        this.x = x, this.pitch = pitch;
         this.svgCircle = Drawing.circle(this.x, this.y, Layout.NOTERADIUS);
         this.svtTextAlteration = Drawing.text(this.x - Layout.NOTERADIUS * 2, this.y + Layout.NOTERADIUS / 2, alterationToSymbol(this.alteration));
         this.svgCircle.note = this;
@@ -23,6 +24,9 @@ export class Note {
     setColor(color) {
         this.color = color;
         this.svgCircle.setAttribute('stroke', this.color);
+    }
+    setVoice(voice) {
+        this.voice = voice;
     }
     get alteration() {
         return this.pitch.alteration;

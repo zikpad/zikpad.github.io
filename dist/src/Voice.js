@@ -30,6 +30,7 @@ let Voice = /** @class */ (() => {
         }
         addNote(note) {
             note.setColor(this.color);
+            note.setVoice(this);
             this.notes.push(note);
         }
         update() {

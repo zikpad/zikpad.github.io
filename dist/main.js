@@ -16,11 +16,12 @@ function resize() {
         (window.innerHeight - document.getElementById("palette").clientHeight - 16).toString();
 }
 let score = new Score();
+let interactionScore;
 function init() {
     score = new Score();
     document.getElementById("svg").setAttribute("height", Layout.HEIGHT.toString());
     document.getElementById("lilypond").addEventListener("click", () => document.getElementById("lilypond").select());
-    new InteractionScore(score);
+    interactionScore = new InteractionScore(score);
     window.onresize = resize;
     resize();
     document.getElementById("downloadLilypond").style.visibility = "hidden";
@@ -30,9 +31,11 @@ function init() {
         ipc.on("open", (evt, data) => {
             init();
             Lilypond.getScore(score, data);
-            new InteractionScore(score);
+            interactionScore = new InteractionScore(score);
         });
         ipc.on("save", () => ipc.send("save", Lilypond.getCode(score)));
+        ipc.on("undo", () => interactionScore.undo());
+        ipc.on("redo", () => interactionScore.redo());
     }
     catch (e) {
         document.getElementById("downloadLilypond").style.visibility = "visible";
