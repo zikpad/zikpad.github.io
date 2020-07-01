@@ -38,8 +38,10 @@ export class InteractionScore {
         this.interactionRecordingMicrophone.onNote = (freq) => {
             //document.getElementById("microphoneInputFreq").innerHTML = freq;
             let pitch = Harmony.freqToPitch(freq);
-            if (this.selection.size == 0)
-                this.do(new CommandAddNote(this.currentVoice, new Note(this.interactionRecordingMicrophone.x, pitch)));
+            if (this.selection.size == 0) {
+                if (!this.currentVoice.contains(this.interactionRecordingMicrophone.x, pitch))
+                    this.do(new CommandAddNote(this.currentVoice, new Note(this.interactionRecordingMicrophone.x, pitch)));
+            }
             else if (this.selection.size == 1)
                 for (let note of this.selection)
                     this.do(new CommandUpdateNote(note, note.x, pitch));

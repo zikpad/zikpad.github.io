@@ -45,6 +45,13 @@ let Voice = /** @class */ (() => {
                 && equalReal(this.timeSteps[i + 1].duration, 0.25 / 3)
                 && equalReal(this.timeSteps[i + 2].duration, 0.25 / 3);
         }
+        contains(x, pitch) {
+            for (let note of this.notes) {
+                if (Math.abs(note.x - x) < 2 && (note.pitch.alteration == pitch.alteration) && (note.pitch.value == pitch.value))
+                    return true;
+            }
+            return false;
+        }
     }
     Voice.voiceColors = ["black", "red", "brown", "orange", "green"];
     return Voice;
