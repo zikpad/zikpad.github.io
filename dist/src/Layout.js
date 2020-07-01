@@ -13,7 +13,7 @@ let Layout = /** @class */ (() => {
             return Math.round((this.BASELINE - y) / Layout.NOTERADIUS);
         }
         static getT(x) {
-            return (x - Layout.XBEGINDEFAULT) / (Layout.WIDTHONE - Layout.XBEGINDEFAULT);
+            return Math.max(0, (x - Layout.XBEGINDEFAULT) / (Layout.WIDTHONE - Layout.XBEGINDEFAULT));
         }
         static getX(t) {
             return Layout.XBEGINDEFAULT + (Layout.WIDTHONE - Layout.XBEGINDEFAULT) * t;

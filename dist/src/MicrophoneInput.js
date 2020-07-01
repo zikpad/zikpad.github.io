@@ -3,9 +3,10 @@ export class MicrophoneInput {
         this.onNote = undefined;
         this.onSound = undefined;
         this.onError = undefined;
+        this.onNoSound = undefined;
         this.FFT_SIZE = 2048;
         this.BUFF_SIZE = 2048;
-        this.TRESHOLDCOUNT = 6;
+        this.TRESHOLDCOUNT = 10;
         this.currentfreq = 0;
         this.fftcount = 0;
         this._started = false;
@@ -59,10 +60,12 @@ export class MicrophoneInput {
             };
         };
         this._started = true;
+        this._isActive = true;
     }
     stop() {
         this._started = false;
         this.gain_node.disconnect();
+        this._isActive = false;
     }
     pause() {
         if (this._started) {
@@ -73,6 +76,9 @@ export class MicrophoneInput {
     unpause() {
         if (this._started)
             this.start();
+    }
+    isActive() {
+        return this._isActive;
     }
     paint(array) {
         let canvas = document.getElementById("microphoneInput");
@@ -86,7 +92,10 @@ export class MicrophoneInput {
             context.lineTo(i * WIDTH / (array.length / 2), BASELINE - (array[i] - 128) * WIDTH / 2 / 128);
         context.stroke();
         let f = Math.min(this.TRESHOLDCOUNT, this.fftcount) / this.TRESHOLDCOUNT;
-        canvas.style.backgroundColor = `rgb(${255 - Math.round(255 * f)}, ${255 - Math.round(128 * f)}, ${255 - Math.round(255 * f)})`;
+        if (this.fftcount >= this.TRESHOLDCOUNT - 1)
+            canvas.style.backgroundColor = "yellow";
+        else
+            canvas.style.backgroundColor = `rgb(${255 - Math.round(255 * f)}, ${255 - Math.round(128 * f)}, ${255 - Math.round(255 * f)})`;
     }
     /**
      * This function is similar to https://github.com/performous/performous/blob/master/game/pitch.cc
@@ -161,6 +170,8 @@ export class MicrophoneInput {
             this.currentfreq = freq;
             this.fftcount = 0;
         }
+        if (max <= THRESHOLD)
+            this.onNoSound();
         if (this.fftcount >= this.TRESHOLDCOUNT)
             return this.currentfreq;
         else
@@ -168,9 +179,11 @@ export class MicrophoneInput {
     }
     findNote(spectrum) {
         let freq = this.getMainFrequency(spectrum);
-        if (freq == undefined || freq < 50) { }
+        if (freq == undefined || freq < 50) {
+        }
         else {
             this.onNote(freq);
+            this.fftcount = 0; //note has been detected, counter reset to 0
         }
     }
 }

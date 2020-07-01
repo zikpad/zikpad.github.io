@@ -7,7 +7,10 @@ export class Analyzer {
         this._draw();
     }
     computeTime(timeSteps) {
-        function getEnd(t) { return Math.floor(t) + 1; }
+        function getEnd(t) {
+            // document.getElementById("message").innerHTML = t;
+            return Math.floor(t) + 1;
+        }
         if (timeSteps.length == 0)
             return;
         for (let ts of timeSteps)
