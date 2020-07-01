@@ -1,3 +1,4 @@
+import { KeyEvent } from './src/KeyEvent.js';
 import { Lilypond } from './src/Lilypond.js';
 //import Vex from 'vexflow';
 //const VF = Vex.Flow;
@@ -42,6 +43,14 @@ function init() {
         document.getElementById("downloadLilypond").onclick = () => {
             download("myscore.ly", Lilypond.getCode(score));
         };
+        document.addEventListener("keydown", (evt) => {
+            if (evt.ctrlKey && evt.keyCode == KeyEvent.DOM_VK_Z) {
+                interactionScore.undo();
+            }
+            else if (evt.ctrlKey && evt.shiftKey && evt.keyCode == KeyEvent.DOM_VK_Z) {
+                interactionScore.redo();
+            }
+        });
     }
 }
 function download(filename, text) {
