@@ -7,7 +7,7 @@ function alterationToSymbol(a) {
         case 0: return "";
         case 1: return "#";
         case 2: return "x";
-        default: return "";
+        default: throw `error ${a} is a wrong accidental`;
     }
 }
 export class Note {
@@ -82,7 +82,7 @@ export class Note {
         if (this.isSilence())
             return "r";
         else
-            return this.pitch.name;
+            return this.pitch.lilypondName;
     }
 }
 //# sourceMappingURL=Note.js.map

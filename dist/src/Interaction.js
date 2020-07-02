@@ -25,6 +25,7 @@ export class InteractionScore {
         this.player = undefined;
         this.dragCopyMade = false;
         this.interactionSelection = undefined;
+        this.key = new Pitch(0, 0);
         ContextualMenu.hide();
         this.interactionRecordingMicrophone = new InteractionRecordingMicrophone();
         this.interactionRecordingMicrophone.x = Layout.getX(0);
@@ -38,6 +39,7 @@ export class InteractionScore {
         this.interactionRecordingMicrophone.onNote = (freq) => {
             //document.getElementById("microphoneInputFreq").innerHTML = freq;
             let pitch = Harmony.freqToPitch(freq);
+            pitch = Harmony.enharmonic(pitch, this.key);
             if (this.selection.size == 0) {
                 if (!this.currentVoice.contains(this.interactionRecordingMicrophone.x, pitch))
                     this.do(new CommandAddNote(this.currentVoice, new Note(this.interactionRecordingMicrophone.x, pitch)));
@@ -67,6 +69,32 @@ export class InteractionScore {
             };
             document.getElementById("voiceButtonPalette").appendChild(b);
         }
+        const keysSelect = document.getElementById("keys");
+        keysSelect.innerHTML = "";
+        let pitchs = [];
+        let pitch = new Pitch(0, -1);
+        let quinte = new Pitch(4, 0);
+        for (let i = -7; i <= 7; i++) {
+            let option = document.createElement("option");
+            option.classList.add("keyButton");
+            option.value = i.toString();
+            pitchs[i] = pitch;
+            // b.title = "switch in key " + pitch.name + " major";
+            option.innerHTML = pitch.name + " major";
+            if (i == 0)
+                option.selected = true;
+            const currentPitch = Harmony.modulo(Harmony.add(pitch, quinte));
+            keysSelect.appendChild(option);
+            pitch = currentPitch;
+        }
+        keysSelect.onchange = () => {
+            this.key = pitchs[parseInt(keysSelect.options[keysSelect.selectedIndex].value)];
+            let command = new CommandGroup();
+            for (let note of this.selection) {
+                command.commands.push(new CommandUpdateNote(note, note.x, Harmony.enharmonic(note.pitch, this.key)));
+            }
+            this.do(command);
+        };
         document.getElementById("playButton").onclick =
             (evt) => {
                 const icon = document.getElementById("playButton").children[0];
@@ -258,7 +286,7 @@ export class InteractionScore {
             if (this.selection.size > 0)
                 this.selection = new Set();
             else if (!this.interactionRecordingMicrophone.isActive()) {
-                let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, new Pitch(Layout.getPitchValue(evt.y), 0));
+                let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, Harmony.accidentalize(new Pitch(Layout.getPitchValue(evt.y), 0), this.key));
                 this.do(new CommandAddNote(this.currentVoice, note));
             }
             ContextualMenu.hide();

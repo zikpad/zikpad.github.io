@@ -6,7 +6,7 @@ export class MicrophoneInput {
         this.onNoSound = undefined;
         this.FFT_SIZE = 2048;
         this.BUFF_SIZE = 2048;
-        this.TRESHOLDCOUNT = 10;
+        this.TRESHOLDCOUNT = 6;
         this.currentfreq = 0;
         this.fftcount = 0;
         this._started = false;

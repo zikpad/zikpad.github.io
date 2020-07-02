@@ -4,6 +4,9 @@ export class Harmony {
         const FREQBASE = 440;
         const midiPitch = 2 + Math.round(Math.log2(Math.pow(freq * Math.pow(2, 1 / 30) / FREQBASE, 12)));
         //* Math.pow(2, 1/30) => for making the frequency higher
+        return Harmony.midiPitchToPitch(midiPitch);
+    }
+    static midiPitchToPitch(midiPitch) {
         let octave = Math.floor(midiPitch / 12);
         let midiPitchM = midiPitch % 12;
         if (midiPitchM < 0)
@@ -29,6 +32,38 @@ export class Harmony {
     }
     static midiPitchMToAccidental(midiPitchM) {
         return [1, 3, 6, 8, 10].indexOf(midiPitchM) >= 0 ? 1 : 0;
+    }
+    static add(pitch1, pitch2) {
+        let result = new Pitch(pitch1.value + pitch2.value, 0);
+        let nbHalfTone = result.nbHalfTones - pitch1.nbHalfTones;
+        result.alteration = pitch2.nbHalfTones - nbHalfTone;
+        return result;
+    }
+    static modulo(pitch) {
+        return new Pitch(pitch.value % 7, pitch.alteration);
+    }
+    static enharmonic(pitch, key) {
+        let pitch0 = Harmony.add(pitch, new Pitch(-key.value, -key.alteration));
+        let pitch0e = Harmony.midiPitchToPitch(pitch0.nbHalfTones);
+        return Harmony.add(pitch0e, key);
+    }
+    static getAccidentals(key) {
+        let array = [];
+        for (let i = 0; i < 7; i++) {
+            let newPitch = Harmony.modulo(Harmony.add(new Pitch(i, 0), key));
+            array[newPitch.value] = newPitch.alteration;
+        }
+        console.log(key);
+        console.log(array);
+        return array;
+    }
+    /**
+     * @param pitch
+     * @param key
+     * @return the pitch with the accidental that is natural in the key
+     */
+    static accidentalize(pitch, key) {
+        return new Pitch(pitch.value, Harmony.getAccidentals(key)[pitch.valueM]);
     }
 }
 //# sourceMappingURL=Harmony.js.map
