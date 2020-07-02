@@ -78,6 +78,7 @@ export class Note {
         this.svtTextAlteration.textContent = alterationToSymbol(this.alteration);
     }
     get y() { return Layout.getY(this.pitch); }
+    get t() { return Layout.getT(this.x); }
     get pitchName() {
         if (this.isSilence())
             return "r";

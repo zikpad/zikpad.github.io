@@ -66,5 +66,16 @@ export class Drawing {
         document.getElementById("svg").appendChild(aRect);
         return aRect;
     }
+    static brisureX(x) {
+        var e = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        const W = 8;
+        const H = 50;
+        let points = "";
+        for (let i = 0; i < 20; i++)
+            points += ` ${i % 2 == 0 ? x + W : x - W},${i * H}`;
+        e.setAttribute('points', points);
+        document.getElementById("svg").appendChild(e);
+        return e;
+    }
 }
 //# sourceMappingURL=Drawing.js.map

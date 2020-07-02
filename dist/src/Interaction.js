@@ -1,3 +1,4 @@
+import { InteractionInsertTime } from './InteractionInsertTime.js';
 import { CommandToggleNote } from './CommandToggleNote.js';
 import { CommandUpdateNote } from './CommandUpdateNote.js';
 import { CommandAddNote } from './CommandAddNote.js';
@@ -17,6 +18,7 @@ import { CommandChangeVoiceNote } from './CommandChangeVoiceNote.js';
 import { CommandDeleteNote } from './CommandDeleteNote.js';
 export class InteractionScore {
     constructor(score) {
+        this.score = score;
         this.undoRedo = new UndoRedo();
         this.selection = new Set();
         this.dragOccurred = false;
@@ -27,6 +29,7 @@ export class InteractionScore {
         this.interactionSelection = undefined;
         this.key = new Pitch(0, 0);
         ContextualMenu.hide();
+        this.interactionInsertTime = new InteractionInsertTime(this.score, this.undoRedo);
         this.interactionRecordingMicrophone = new InteractionRecordingMicrophone();
         this.interactionRecordingMicrophone.x = Layout.getX(0);
         this.interactionRecordingMicrophone.onNoSound = (freq) => {
@@ -49,7 +52,6 @@ export class InteractionScore {
                     this.do(new CommandUpdateNote(note, note.x, pitch));
             this.update();
         };
-        this.score = score;
         this.currentVoice = this.score.voices[0];
         score.update();
         document.getElementById("voiceButtonPalette").innerHTML = "";
@@ -91,7 +93,8 @@ export class InteractionScore {
             this.key = pitchs[parseInt(keysSelect.options[keysSelect.selectedIndex].value)];
             let command = new CommandGroup();
             for (let note of this.selection) {
-                command.commands.push(new CommandUpdateNote(note, note.x, Harmony.enharmonic(note.pitch, this.key)));
+                //Harmony.enharmonic(note.pitch, this.key)
+                command.commands.push(new CommandUpdateNote(note, note.x, Harmony.accidentalize(note.pitch, this.key)));
             }
             this.do(command);
         };
@@ -121,6 +124,7 @@ export class InteractionScore {
     undo() { this.undoRedo.undo(); this.update(); ContextualMenu.hide(); }
     redo() { this.undoRedo.redo(); this.update(); ContextualMenu.hide(); }
     do(command) { this.undoRedo.do(command); this.update(); ContextualMenu.hide(); }
+    doKeepMenu(command) { this.undoRedo.do(command); this.update(); }
     actionDelete() {
         let command = new CommandGroup();
         for (let note of this.selection)
@@ -140,13 +144,13 @@ export class InteractionScore {
         let command = new CommandGroup();
         for (let note of this.selection)
             command.commands.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.min(2, note.alteration + 1))));
-        this.do(command);
+        this.doKeepMenu(command);
     }
     actionAlterationDown() {
         let command = new CommandGroup();
         for (let note of this.selection)
             command.commands.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.max(-2, note.alteration - 1))));
-        this.do(command);
+        this.doKeepMenu(command);
     }
     update() {
         this.score.update();
@@ -182,9 +186,14 @@ export class InteractionScore {
     }
     mouseDownBackground(evt) {
         ContextualMenu.hide();
-        if (this.interactionSelection == undefined)
-            this.interactionSelection = new InteractionSelection(this.score, evt);
-        this.interactionRecordingMicrophone.x = evt.clientX;
+        if (evt.shiftKey) {
+            this.interactionInsertTime.start(evt.clientX);
+        }
+        else {
+            if (this.interactionSelection == undefined)
+                this.interactionSelection = new InteractionSelection(this.score, evt);
+            this.interactionRecordingMicrophone.x = evt.clientX;
+        }
     }
     startDrag(evt) {
         this.dragOccurred = false;
@@ -218,7 +227,12 @@ export class InteractionScore {
     }
     drag(evt) {
         this.dragOccurred = true;
-        if (this.interactionSelection) {
+        if (this.interactionInsertTime.isActive) {
+            this.interactionInsertTime.move(evt.clientX);
+            this.update();
+            this.interactionInsertTime.draw();
+        }
+        else if (this.interactionSelection) {
             this.interactionSelection.mouseMove(evt);
             ContextualMenu.hide();
         }
@@ -269,8 +283,11 @@ export class InteractionScore {
         }
     }
     endDrag(evt) {
+        if (this.interactionInsertTime.isActive) {
+            this.do(this.interactionInsertTime.stop());
+        }
         //selection rectangle
-        if (this.interactionSelection && this.interactionSelection.isActive()) {
+        else if (this.interactionSelection && this.interactionSelection.isActive()) {
             if (evt.ctrlKey) {
                 for (let note of this.interactionSelection.getSelection())
                     this.selection.add(note);
