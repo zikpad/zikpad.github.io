@@ -254,7 +254,7 @@ export class InteractionScore {
                     for (let note of this.selection) {
                         let dx = coord.x - this.offset.get(note).x;
                         let dy = coord.y - this.offset.get(note).y;
-                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, new Pitch(Layout.getPitchValue(dy), 0)));
+                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
                     }
                 }
                 else {
@@ -262,7 +262,7 @@ export class InteractionScore {
                     for (let note of this.selection) {
                         let dx = coord.x - this.offset.get(note).x;
                         let dy = coord.y - this.offset.get(note).y;
-                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, new Pitch(Layout.getPitchValue(dy), 0)));
+                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
                     }
                 }
                 this.do(this.dragCommand);
@@ -274,8 +274,9 @@ export class InteractionScore {
                 let command = (this.dragCommand.commands.length == this.selection.size) ?
                     this.dragCommand.commands[i] :
                     this.dragCommand.commands[this.selection.size + i];
-                note.update(dx, new Pitch(Layout.getPitchValue(dy), 0));
-                command.update(dx, new Pitch(Layout.getPitchValue(dy), 0));
+                let pitch = Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key);
+                note.update(dx, pitch);
+                command.update(dx, pitch);
                 i++;
             }
             ContextualMenu.hide();

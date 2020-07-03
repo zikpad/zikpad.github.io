@@ -1,5 +1,6 @@
 import { KeyEvent } from './src/KeyEvent.js';
 import { Lilypond } from './src/Lilypond.js';
+import { OpenFileDragDrop } from './src/OpenFileDragDrop.js';
 //import Vex from 'vexflow';
 //const VF = Vex.Flow;
 // Create an SVG renderer and attach it to the DIV element named "vf".
@@ -27,6 +28,7 @@ function init() {
     resize();
     document.getElementById("downloadLilypond").style.visibility = "hidden";
     try {
+        /** setting when desktop app*/
         const ipc = require('electron').ipcRenderer;
         ipc.on("new", () => init());
         ipc.on("open", (evt, data) => {
@@ -37,8 +39,12 @@ function init() {
         ipc.on("save", () => ipc.send("save", Lilypond.getCode(score)));
         ipc.on("undo", () => interactionScore.undo());
         ipc.on("redo", () => interactionScore.redo());
+        new OpenFileDragDrop((file) => {
+            ipc.send("open", file.path);
+        });
     }
     catch (e) {
+        /** setting when online web app*/
         document.getElementById("downloadLilypond").style.visibility = "visible";
         document.getElementById("downloadLilypond").onclick = () => {
             download("myscore.ly", Lilypond.getCode(score));
@@ -50,6 +56,16 @@ function init() {
             else if (evt.ctrlKey && evt.shiftKey && evt.keyCode == KeyEvent.DOM_VK_Z) {
                 interactionScore.redo();
             }
+        });
+        new OpenFileDragDrop((file) => {
+            console.log("Open file " + file.path);
+            let reader = new FileReader();
+            reader.addEventListener('load', function () {
+                init();
+                Lilypond.getScore(score, reader.result);
+                interactionScore = new InteractionScore(score);
+            });
+            reader.readAsText(file, 'UTF-8');
         });
     }
 }
