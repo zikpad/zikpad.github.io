@@ -56,7 +56,7 @@ function init() {
             }
         });
         new OpenFileDragDrop((file) => {
-            console.log("Open file " + file.path);
+            console.log("Open file " + file.name);
             let reader = new FileReader();
             reader.addEventListener('load', function () {
                 init();

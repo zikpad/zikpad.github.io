@@ -25,17 +25,17 @@ export class Player {
             if (notes.length > 0)
                 this.sounds[i].stop();
             for (let note of notes)
-                if (!note.isSilence() || note.svgCircle.classList.contains("played")) {
+                if (!note.isSilence() || note.domElement.classList.contains("played")) {
                     this.sounds[i].noteOn(note.pitch.midiPitch, 128);
-                    note.svgCircle.classList.add("played");
+                    note.domElement.classList.add("played");
                 }
         }
         setTimeout(() => this._loop(), DELAYMS);
     }
     stop() {
-        let circles = document.getElementsByTagName("circle");
-        for (let i = 0; i < circles.length; i++) {
-            circles[i].classList.remove("played");
+        let noteElements = document.getElementsByClassName("note");
+        for (let i = 0; i < noteElements.length; i++) {
+            noteElements[i].classList.remove("played");
         }
         this.stopped = true;
     }

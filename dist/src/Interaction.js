@@ -158,7 +158,7 @@ export class InteractionScore {
         this.updateAsked = false;
     }
     setup() {
-        let circles = document.getElementsByTagName("circle");
+        let circles = document.getElementsByClassName("note");
         for (let i = 0; i < circles.length; i++) {
             let circle = circles[i];
             circle.classList.remove("selection");
@@ -168,7 +168,7 @@ export class InteractionScore {
         }
         if (this.selection.size >= 1)
             for (let note of this.selection) {
-                note.svgCircle.classList.add("selection");
+                note.domElement.classList.add("selection");
                 this.interactionRecordingMicrophone.x = note.x;
             }
         document.onkeydown = (evt) => {
@@ -213,8 +213,8 @@ export class InteractionScore {
         let r = new Map();
         for (let note of selection) {
             let p = { x: evt.clientX, y: evt.clientY };
-            p.x -= parseFloat(note.svgCircle.getAttributeNS(null, "cx"));
-            p.y -= parseFloat(note.svgCircle.getAttributeNS(null, "cy"));
+            p.x -= parseFloat(note.domElement.getAttributeNS(null, "cx"));
+            p.y -= parseFloat(note.domElement.getAttributeNS(null, "cy"));
             r.set(note, p);
         }
         return r;
