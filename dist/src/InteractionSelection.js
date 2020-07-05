@@ -1,4 +1,7 @@
 import { Drawing } from './Drawing.js';
+/**
+ * handle the selection
+ */
 export class InteractionSelection {
     constructor(score, evt) {
         this.svgRectangle = undefined;

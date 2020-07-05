@@ -1,4 +1,7 @@
 import { Layout } from './Layout.js';
+/**
+ * Contextual Menu around notes
+ */
 export class ContextualMenu {
     static toggle(selection) {
         if (document.getElementById("toggle").style.visibility == "visible") {
@@ -23,29 +26,28 @@ export class ContextualMenu {
         }
         if (selection.size == 0) {
             document.getElementById("toggle").style.visibility = "hidden";
-            document.getElementById("alterationUp").style.visibility = "hidden";
-            document.getElementById("alterationDown").style.visibility = "hidden";
+            document.getElementById("accidentalUp").style.visibility = "hidden";
+            document.getElementById("accidentalDown").style.visibility = "hidden";
             document.getElementById("delete").style.visibility = "hidden";
         }
         else {
             document.getElementById("toggle").style.visibility = "visible";
             document.getElementById("delete").style.visibility = "visible";
             const MENURADIUS = 40;
-            const BUTTONSIZE = 48;
             setPosition("toggle", x2 + MENURADIUS, y1 - MENURADIUS);
             setPosition("delete", x2 + MENURADIUS, y1 + MENURADIUS);
             if (selection.size == 1) {
-                document.getElementById("alterationUp").style.visibility = "visible";
-                document.getElementById("alterationDown").style.visibility = "visible";
-                setPosition("alterationUp", x1 - Layout.NOTERADIUS - MENURADIUS, y1 - MENURADIUS);
-                setPosition("alterationDown", x1 - Layout.NOTERADIUS - MENURADIUS, y1 + MENURADIUS);
+                document.getElementById("accidentalUp").style.visibility = "visible";
+                document.getElementById("accidentalDown").style.visibility = "visible";
+                setPosition("accidentalUp", x1 - Layout.NOTERADIUS - MENURADIUS, y1 - MENURADIUS);
+                setPosition("accidentalDown", x1 - Layout.NOTERADIUS - MENURADIUS, y1 + MENURADIUS);
             }
         }
     }
     static hide() {
         document.getElementById("toggle").style.visibility = "hidden";
-        document.getElementById("alterationUp").style.visibility = "hidden";
-        document.getElementById("alterationDown").style.visibility = "hidden";
+        document.getElementById("accidentalUp").style.visibility = "hidden";
+        document.getElementById("accidentalDown").style.visibility = "hidden";
         document.getElementById("delete").style.visibility = "hidden";
     }
 }

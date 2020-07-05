@@ -1,6 +1,18 @@
+/**
+ * A command that contains other commands
+ */
 export class CommandGroup {
     constructor() {
         this.commands = [];
+    }
+    push(command) {
+        this.commands.push(command);
+    }
+    get(i) {
+        return this.commands[i];
+    }
+    get size() {
+        return this.commands.length;
     }
     do() {
         for (let i = 0; i < this.commands.length; i++)

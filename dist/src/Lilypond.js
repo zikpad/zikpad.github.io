@@ -162,7 +162,7 @@ function test() {
         alert("aïe");
     if (Lilypond.lilyPitchToPitch("eis''").value != 2 + 7)
         alert("aïe value wrong");
-    if (Lilypond.lilyPitchToPitch("eis''").alteration != 1)
+    if (Lilypond.lilyPitchToPitch("eis''").accidental != 1)
         alert("aïe accidental wrong");
 }
 test();

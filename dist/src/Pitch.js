@@ -1,7 +1,7 @@
 export class Pitch {
-    constructor(value, alteration) {
+    constructor(value, accidental) {
         this.value = value;
-        this.alteration = alteration;
+        this.accidental = accidental;
     }
     get valueM() {
         let x = this.value % 7;
@@ -24,7 +24,7 @@ export class Pitch {
                 case 6: return 11;
             }
         };
-        return 12 * Math.floor(this.value / 7) + f() + this.alteration;
+        return 12 * Math.floor(this.value / 7) + f() + this.accidental;
     }
     get lilypondName() {
         let f = () => {
@@ -43,7 +43,7 @@ export class Pitch {
             throw "value % 7 out of scope";
         };
         let a = () => {
-            switch (this.alteration) {
+            switch (this.accidental) {
                 case -2: return "eses";
                 case -1: return "es";
                 case 0: return "";

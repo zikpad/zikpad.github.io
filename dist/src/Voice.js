@@ -47,7 +47,7 @@ let Voice = /** @class */ (() => {
         }
         contains(x, pitch) {
             for (let note of this.notes) {
-                if (Math.abs(note.x - x) < 2 && (note.pitch.alteration == pitch.alteration) && (note.pitch.value == pitch.value))
+                if (Math.abs(note.x - x) < 2 && (note.pitch.accidental == pitch.accidental) && (note.pitch.value == pitch.value))
                     return true;
             }
             return false;

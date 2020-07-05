@@ -3,6 +3,9 @@ import { CommandUpdateNote } from './CommandUpdateNote.js';
 import { CommandGroup } from './CommandGroup.js';
 import { Drawing } from "./Drawing.js";
 import { Layout } from "./Layout.js";
+/**
+ * handle the tool to insert (or remove) time between notes
+ */
 export class InteractionInsertTime {
     constructor(score, undoredo) {
         this.score = score;
@@ -44,7 +47,7 @@ export class InteractionInsertTime {
             //go back temporary to the initial state 
             for (let note of this.notes) {
                 note.update(note.x - dx, note.pitch);
-                command.commands.push(new CommandUpdateNote(note, note.x + dx, note.pitch));
+                command.push(new CommandUpdateNote(note, note.x + dx, note.pitch));
             }
         }
         else {
@@ -53,10 +56,10 @@ export class InteractionInsertTime {
             for (let voice of this.score.voices)
                 for (let note of voice.notes) {
                     if (note.x > this.x) {
-                        command.commands.push(new CommandUpdateNote(note, note.x - dx, note.pitch));
+                        command.push(new CommandUpdateNote(note, note.x - dx, note.pitch));
                     }
                     else if (this.x2 < note.x && note.x < this.x) {
-                        command.commands.push(new CommandDeleteNote(note));
+                        command.push(new CommandDeleteNote(note));
                     }
                 }
         }

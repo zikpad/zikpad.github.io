@@ -65,7 +65,7 @@ export class InteractionScore {
                 this.currentVoice = score.voices[i];
                 let command = new CommandGroup();
                 for (let note of this.selection) {
-                    command.commands.push(new CommandChangeVoiceNote(note, this.currentVoice));
+                    command.push(new CommandChangeVoiceNote(note, this.currentVoice));
                 }
                 this.do(command);
             };
@@ -94,7 +94,7 @@ export class InteractionScore {
             let command = new CommandGroup();
             for (let note of this.selection) {
                 //Harmony.enharmonic(note.pitch, this.key)
-                command.commands.push(new CommandUpdateNote(note, note.x, Harmony.accidentalize(note.pitch, this.key)));
+                command.push(new CommandUpdateNote(note, note.x, Harmony.accidentalize(note.pitch, this.key)));
             }
             this.do(command);
         };
@@ -117,8 +117,8 @@ export class InteractionScore {
             };
         document.getElementById("delete").onclick = () => { this.actionDelete(); };
         document.getElementById("toggle").onclick = () => { this.actionToggle(); };
-        document.getElementById("alterationUp").onclick = () => { this.actionAlterationUp(); };
-        document.getElementById("alterationDown").onclick = () => { this.actionAlterationDown(); };
+        document.getElementById("accidentalUp").onclick = () => { this.actionAccidentalUp(); };
+        document.getElementById("accidentalDown").onclick = () => { this.actionAccidentalDown(); };
         this.setup();
     }
     undo() { this.undoRedo.undo(); this.update(); ContextualMenu.hide(); }
@@ -128,7 +128,7 @@ export class InteractionScore {
     actionDelete() {
         let command = new CommandGroup();
         for (let note of this.selection)
-            command.commands.push(new CommandDeleteNote(note));
+            command.push(new CommandDeleteNote(note));
         this.do(command);
         this.selection = new Set();
         this.update();
@@ -137,19 +137,19 @@ export class InteractionScore {
     actionToggle() {
         let command = new CommandGroup();
         for (let note of this.selection)
-            command.commands.push(new CommandToggleNote(note));
+            command.push(new CommandToggleNote(note));
         this.do(command);
     }
-    actionAlterationUp() {
+    actionAccidentalUp() {
         let command = new CommandGroup();
         for (let note of this.selection)
-            command.commands.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.min(2, note.alteration + 1))));
+            command.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.min(2, note.accidental + 1))));
         this.doKeepMenu(command);
     }
-    actionAlterationDown() {
+    actionAccidentalDown() {
         let command = new CommandGroup();
         for (let note of this.selection)
-            command.commands.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.max(-2, note.alteration - 1))));
+            command.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.max(-2, note.accidental - 1))));
         this.doKeepMenu(command);
     }
     update() {
@@ -246,7 +246,7 @@ export class InteractionScore {
                     for (let note of this.selection) {
                         let newNote = new Note(note.x, note.pitch);
                         newSelection.push(newNote);
-                        this.dragCommand.commands.push(new CommandAddNote(note.voice, newNote));
+                        this.dragCommand.push(new CommandAddNote(note.voice, newNote));
                     }
                     this.selection = new Set(newSelection);
                     this.offset = this.getOffset(evt, this.selection);
@@ -254,7 +254,7 @@ export class InteractionScore {
                     for (let note of this.selection) {
                         let dx = coord.x - this.offset.get(note).x;
                         let dy = coord.y - this.offset.get(note).y;
-                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
+                        this.dragCommand.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
                     }
                 }
                 else {
@@ -262,7 +262,7 @@ export class InteractionScore {
                     for (let note of this.selection) {
                         let dx = coord.x - this.offset.get(note).x;
                         let dy = coord.y - this.offset.get(note).y;
-                        this.dragCommand.commands.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
+                        this.dragCommand.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
                     }
                 }
                 this.do(this.dragCommand);
@@ -271,9 +271,9 @@ export class InteractionScore {
             for (let note of this.selection) {
                 let dx = coord.x - this.offset.get(note).x;
                 let dy = coord.y - this.offset.get(note).y;
-                let command = (this.dragCommand.commands.length == this.selection.size) ?
-                    this.dragCommand.commands[i] :
-                    this.dragCommand.commands[this.selection.size + i];
+                let command = (this.dragCommand.size == this.selection.size) ?
+                    this.dragCommand.get(i) :
+                    this.dragCommand.get(this.selection.size + i);
                 let pitch = Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key);
                 note.update(dx, pitch);
                 command.update(dx, pitch);

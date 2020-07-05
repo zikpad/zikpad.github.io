@@ -1,6 +1,6 @@
 import { Layout } from "./Layout.js";
 import { Drawing } from "./Drawing.js";
-function alterationToSymbol(a) {
+function accidentalToSymbol(a) {
     switch (a) {
         case -2: return "bb";
         case -1: return "b";
@@ -16,9 +16,8 @@ export class Note {
         this.pitch = pitch;
         this.silence = false;
         this.color = "black";
-        this._alteration = 0;
         this.svgCircle = Drawing.circle(this.x, this.y, Layout.NOTERADIUS);
-        this.svtTextAlteration = Drawing.text(this.x - Layout.NOTERADIUS * 2, this.y + Layout.NOTERADIUS / 2, alterationToSymbol(this.alteration));
+        this.svtTextAccidental = Drawing.text(this.x - Layout.NOTERADIUS * 2, this.y + Layout.NOTERADIUS / 2, accidentalToSymbol(this.accidental));
         this.svgCircle.note = this;
     }
     setColor(color) {
@@ -28,24 +27,24 @@ export class Note {
     setVoice(voice) {
         this.voice = voice;
     }
-    get alteration() {
-        return this.pitch.alteration;
+    get accidental() {
+        return this.pitch.accidental;
     }
-    set alteration(alt) {
-        this.pitch.alteration = alt;
-        this.svtTextAlteration.textContent = alterationToSymbol(this.alteration);
+    set accidental(accidental) {
+        this.pitch.accidental = accidental;
+        this.svtTextAccidental.textContent = accidentalToSymbol(this.accidental);
     }
     ;
     draw() {
         document.getElementById("svg").appendChild(this.svgCircle);
-        document.getElementById("svg").appendChild(this.svtTextAlteration);
+        document.getElementById("svg").appendChild(this.svtTextAccidental);
     }
     /**
      * toggle Silence <-> Not Silence (Real note)
      */
     toggle() {
         this.silence = !this.silence;
-        this.svtTextAlteration.style.visibility = this.silence ? "hidden" : "visible";
+        this.svtTextAccidental.style.visibility = this.silence ? "hidden" : "visible";
         if (this.svgCircle.classList.contains("silence"))
             this.svgCircle.classList.remove("silence");
         else
@@ -73,17 +72,12 @@ export class Note {
         this.x = x, this.pitch = pitch;
         this.svgCircle.setAttribute('cx', x.toString());
         this.svgCircle.setAttribute('cy', this.y.toString());
-        this.svtTextAlteration.setAttribute('x', (this.x - Layout.NOTERADIUS * 2).toString());
-        this.svtTextAlteration.setAttribute('y', (this.y + Layout.NOTERADIUS / 2).toString());
-        this.svtTextAlteration.textContent = alterationToSymbol(this.alteration);
+        this.svtTextAccidental.setAttribute('x', (this.x - Layout.NOTERADIUS * 2).toString());
+        this.svtTextAccidental.setAttribute('y', (this.y + Layout.NOTERADIUS / 2).toString());
+        this.svtTextAccidental.textContent = accidentalToSymbol(this.accidental);
     }
     get y() { return Layout.getY(this.pitch); }
     get t() { return Layout.getT(this.x); }
-    get pitchName() {
-        if (this.isSilence())
-            return "r";
-        else
-            return this.pitch.lilypondName;
-    }
+    get pitchName() { return (this.isSilence()) ? "r" : this.pitch.lilypondName; }
 }
 //# sourceMappingURL=Note.js.map
