@@ -111,8 +111,8 @@ export class TimeStep {
             minX = Math.min(note.x, minX);
             maxX = Math.max(note.x, maxX);
         }
-        if (Math.abs(minX - maxX) < Layout.NOTERADIUS / 2)
-            return x + Layout.NOTERADIUS;
+        if (Math.abs(minX - maxX) < Layout.NOTERADIUSX / 2)
+            return x + Layout.NOTERADIUSX;
         else
             return x;
     }

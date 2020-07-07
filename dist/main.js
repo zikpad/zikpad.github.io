@@ -12,8 +12,10 @@ window.onload = init;
  * when the window is resized
  */
 function resize() {
-    document.getElementById("svg-wrapper").style.height =
-        (window.innerHeight - document.getElementById("palette").clientHeight - 16).toString();
+    let screenHeight = (window.innerHeight - document.getElementById("palette").clientHeight - 16);
+    document.getElementById("container").style.height =
+        screenHeight.toString();
+    Layout.adaptZoom();
 }
 let score = new Score();
 let interactionScore;
@@ -26,6 +28,7 @@ function init() {
     resize();
     document.getElementById("downloadLilypond").style.visibility = "hidden";
     try {
+        Layout.zoom = 0.5;
         /** setting when desktop app*/
         const ipc = require('electron').ipcRenderer;
         ipc.on("new", () => init());

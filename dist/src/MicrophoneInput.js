@@ -4,10 +4,13 @@ export class MicrophoneInput {
         this.onSound = undefined;
         this.onError = undefined;
         this.onNoSound = undefined;
-        this.FFT_SIZE = 2048;
-        this.BUFF_SIZE = 2048;
-        this.TRESHOLDCOUNT = 6;
-        this.currentfreq = 0;
+        this.FFT_SIZE = 2048 * 2;
+        this.BUFF_SIZE = 2048 * 2;
+        this.TRESHOLDCOUNT = 2;
+        this.THRESHOLDVOLUME = 300;
+        this.THRESHOLDPEEKVOLUME = 10;
+        this.THESHOLDNBPEEKS = 30; //more peeks = noise
+        this.currentfreq = undefined;
         this.fftcount = 0;
         this._started = false;
         this.audioInput = null;
@@ -105,12 +108,18 @@ export class MicrophoneInput {
      */
     getMainFrequency(spectrum) {
         let SPECTRUMFACTOR = 32;
-        const THRESHOLD = 600;
+        function getSpectrumMax(spectrum) {
+            let max = 0;
+            for (let i = 1; i < spectrum.length / 2; i++)
+                max = Math.max(max, spectrum[i]);
+            return max;
+        }
         function getPeeksAndClean(spectrum) {
             let peeks = [];
             let peekseval = [];
+            const max = getSpectrumMax(spectrum);
             for (let i = 1; i < spectrum.length / 2; i++) {
-                if (spectrum[i - 1] <= spectrum[i] && spectrum[i] <= spectrum[i + 1] && spectrum[i] > 0) {
+                if (spectrum[i - 1] <= spectrum[i] && spectrum[i] <= spectrum[i + 1] && spectrum[i] > max / 2) {
                     peeks.push(new Peek(i * SPECTRUMFACTOR));
                 }
             }
@@ -163,31 +172,50 @@ export class MicrophoneInput {
                 jmax = j;
             }
         }
-        let freq = peeks[jmax].freqFond;
+        let nbBigpeeks = 0;
+        for (let j = 0; j < peeks.length; j++) {
+            if (j != jmax) {
+                if (peeks[j].mark > peeks[jmax].mark * 0.7)
+                    nbBigpeeks += peeks[j].mark / peeks[jmax].mark;
+            }
+        }
+        let frequencyFound = peeks[jmax].freqFondamental;
+        document.getElementById("message").innerHTML = "" + nbBigpeeks;
+        if (max <= this.THRESHOLDVOLUME || nbBigpeeks > this.THESHOLDNBPEEKS) {
+            this.onNoSound();
+            frequencyFound = undefined;
+        }
         // document.getElementById("message").innerHTML = `force: ${max} freq: ${Math.round(freq)} count: ${this.fftcount}`;
-        if (max > THRESHOLD && Math.abs(this.currentfreq - freq) < 30) {
-            this.fftcount++;
+        if (frequencyFound) {
+            if (this.currentfreq && (Math.abs(this.currentfreq - frequencyFound) < 30)) {
+                this.fftcount++;
+                this.currentfreq = 0.5 * this.currentfreq + 0.5 * frequencyFound;
+            }
+            else {
+                this.currentfreq = frequencyFound;
+                this.fftcount = 0;
+            }
             this.onSound(this.currentfreq);
-            this.currentfreq = 0.5 * this.currentfreq + 0.5 * freq;
         }
         else {
-            this.currentfreq = freq;
+            this.currentfreq = undefined;
             this.fftcount = 0;
         }
-        if (max <= THRESHOLD)
-            this.onNoSound();
         if (this.fftcount >= this.TRESHOLDCOUNT)
             return this.currentfreq;
         else
             return undefined;
     }
+    isSingingNewNote() {
+        return this.fftcount == this.TRESHOLDCOUNT;
+    }
     findNote(spectrum) {
         let freq = this.getMainFrequency(spectrum);
         if (freq == undefined || freq < 50) {
         }
-        else {
+        else if (this.isSingingNewNote()) {
             this.onNote(freq);
-            this.fftcount = 0; //note has been detected, counter reset to 0
+            //  this.fftcount = 0; //note has been detected, counter reset to 0
         }
     }
 }
@@ -197,7 +225,7 @@ class Peek {
         this.divFond = 1;
         this.freq = freq;
     }
-    get freqFond() {
+    get freqFondamental() {
         return this.freq / this.divFond;
     }
 }

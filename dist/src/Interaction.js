@@ -59,7 +59,7 @@ export class InteractionScore {
             let b = document.createElement("button");
             b.classList.add("voiceButton");
             b.title = "write in voice n°" + i;
-            b.innerHTML = "voice n°" + i;
+            //  b.innerHTML = "voice n°" + i;
             b.style.backgroundColor = Voice.voiceColors[i];
             b.onclick = () => {
                 this.currentVoice = score.voices[i];
@@ -102,13 +102,16 @@ export class InteractionScore {
             (evt) => {
                 const icon = document.getElementById("playButton").children[0];
                 if (this.player == undefined) {
-                    this.player = new Player(this.score, document.getElementById("svg-wrapper").scrollLeft / Layout.WIDTHONE);
-                    this.interactionRecordingMicrophone.pause();
+                    this.player = new Player(this.score, document.getElementById("container").scrollLeft / Layout.WIDTHONE);
+                    this.player.onPlayingLoop = (t) => {
+                        this.interactionRecordingMicrophone.x = Layout.getX(t);
+                    };
+                    //  this.interactionRecordingMicrophone.pause();
                     icon.classList.add("fa-stop");
                     icon.classList.remove("fa-play");
                 }
                 else {
-                    this.interactionRecordingMicrophone.unpause();
+                    //this.interactionRecordingMicrophone.unpause();
                     this.player.stop();
                     this.player = undefined;
                     icon.classList.remove("fa-stop");
@@ -187,12 +190,12 @@ export class InteractionScore {
     mouseDownBackground(evt) {
         ContextualMenu.hide();
         if (evt.shiftKey) {
-            this.interactionInsertTime.start(evt.clientX);
+            this.interactionInsertTime.start(Layout.clientToXY(evt).x);
         }
         else {
             if (this.interactionSelection == undefined)
                 this.interactionSelection = new InteractionSelection(this.score, evt);
-            this.interactionRecordingMicrophone.x = evt.clientX;
+            this.interactionRecordingMicrophone.x = Layout.clientToXY(evt).x;
         }
     }
     startDrag(evt) {
@@ -212,7 +215,7 @@ export class InteractionScore {
     getOffset(evt, selection) {
         let r = new Map();
         for (let note of selection) {
-            let p = { x: evt.clientX, y: evt.clientY };
+            let p = Layout.clientToXY(evt);
             p.x -= parseFloat(note.domElement.getAttributeNS(null, "cx"));
             p.y -= parseFloat(note.domElement.getAttributeNS(null, "cy"));
             r.set(note, p);
@@ -228,7 +231,7 @@ export class InteractionScore {
     drag(evt) {
         this.dragOccurred = true;
         if (this.interactionInsertTime.isActive) {
-            this.interactionInsertTime.move(evt.clientX);
+            this.interactionInsertTime.move(Layout.clientToXY(evt).x);
             this.update();
             this.interactionInsertTime.draw();
         }
@@ -238,7 +241,7 @@ export class InteractionScore {
         }
         else if (this.draggedNote) {
             evt.preventDefault();
-            let coord = { x: evt.clientX, y: evt.clientY };
+            let coord = Layout.clientToXY(evt);
             if (this.dragCommand == undefined) {
                 if (evt.ctrlKey) {
                     this.dragCommand = new CommandGroup();
@@ -304,7 +307,8 @@ export class InteractionScore {
             if (this.selection.size > 0)
                 this.selection = new Set();
             else if (!this.interactionRecordingMicrophone.isActive()) {
-                let note = new Note(evt.clientX + document.getElementById("svg-wrapper").scrollLeft, Harmony.accidentalize(new Pitch(Layout.getPitchValue(evt.y), 0), this.key));
+                let p = Layout.clientToXY(evt);
+                let note = new Note(p.x + document.getElementById("container").scrollLeft, Harmony.accidentalize(new Pitch(Layout.getPitchValue(p.y), 0), this.key));
                 this.do(new CommandAddNote(this.currentVoice, note));
             }
             ContextualMenu.hide();

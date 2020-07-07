@@ -1,6 +1,7 @@
 import { VoiceSounds } from './Sound.js';
 export class Player {
     constructor(score, startingTime) {
+        this.onPlayingLoop = undefined;
         this.stopped = false;
         this.sounds = [];
         this.score = score;
@@ -10,8 +11,9 @@ export class Player {
         this._loop();
     }
     _loop() {
-        const WINDOW = 0.02;
-        const DELAYMS = 2000 * WINDOW;
+        let tempo = parseInt(document.getElementById("tempo").value);
+        const DELAYMS = 50;
+        const WINDOW = ((tempo / 60) * 1000 / DELAYMS) / 1000;
         if (this.stopped) {
             for (let i in this.score.voices)
                 this.sounds[i].stop();
@@ -30,6 +32,8 @@ export class Player {
                     note.domElement.classList.add("played");
                 }
         }
+        if (this.onPlayingLoop)
+            this.onPlayingLoop(this.t);
         setTimeout(() => this._loop(), DELAYMS);
     }
     stop() {

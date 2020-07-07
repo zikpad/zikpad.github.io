@@ -1,7 +1,7 @@
 export class OpenFileDragDrop {
     constructor(callBackOpenFile) {
         console.log("OpenFileDragDrop");
-        let myZikpad = document.getElementById("svg-wrapper");
+        let myZikpad = document.getElementById("container");
         myZikpad.ondragover = (event) => {
             console.log('File(s) in drop zone');
             // Prevent default behavior (Prevent file from being opened)
