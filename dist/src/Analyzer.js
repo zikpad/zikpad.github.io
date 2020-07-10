@@ -1,5 +1,6 @@
 import { Drawing } from './Drawing.js';
 import { Layout } from "./Layout.js";
+import { Time } from './Time.js';
 /**
  * this class analyses a voice and infers the rhythm.
  */
@@ -14,7 +15,9 @@ export class Analyzer {
      * @param timeSteps an array of timeSteps. Each timestep is a collection of notes played at the same time.
      */
     computeTime(timeSteps) {
-        function getEndByDefault(t) { return Math.floor(t) + 1; }
+        function getEndByDefault(t) {
+            return Time.getMeasureNumber(t) * Time.getMeasureDuration() + Time.getMeasureDuration();
+        }
         for (let ts of timeSteps)
             ts.t = Layout.getT(ts.x);
         for (let i = 0; i < timeSteps.length; i++) {

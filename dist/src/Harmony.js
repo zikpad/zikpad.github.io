@@ -98,8 +98,6 @@ export class Harmony {
             let newPitch = Harmony.modulo(Harmony.add(new Pitch(i, 0), key));
             array[newPitch.value] = newPitch.accidental;
         }
-        console.log(key);
-        console.log(array);
         return array;
     }
     /**

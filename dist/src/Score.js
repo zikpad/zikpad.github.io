@@ -1,6 +1,7 @@
 import { Drawing } from './Drawing.js';
 import { Layout } from './Layout.js';
 import { Voice } from './Voice.js';
+import { Time } from './Time.js';
 export class Score {
     constructor() {
         this.voices = [];
@@ -48,7 +49,8 @@ function drawLines() {
         Drawing.line(0, y, Layout.WIDTH, y);
     }
     //measure lines
-    for (let t = 1; t < 30; t++) {
+    const measureDuration = Time.getMeasureDuration();
+    for (let t = measureDuration; t < 30; t += measureDuration) {
         let x = Layout.getX(t) - 2 * Layout.NOTERADIUS;
         Drawing.line(x, Layout.getY(-10), x, Layout.getY(10));
     }

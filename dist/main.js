@@ -25,7 +25,7 @@ function init() {
     document.getElementById("lilypond").addEventListener("click", () => document.getElementById("lilypond").select());
     interactionScore = new InteractionScore(score);
     window.onresize = resize;
-    resize();
+    setTimeout(resize, 100);
     document.getElementById("downloadLilypond").style.visibility = "hidden";
     try {
         Layout.zoom = 0.5;

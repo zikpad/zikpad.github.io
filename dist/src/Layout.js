@@ -35,7 +35,7 @@ let Layout = /** @class */ (() => {
             document.getElementById("container").scrollLeft = x * Layout._zoom;
         }
         static adaptZoom() {
-            Layout.zoom = Math.min(1, document.getElementById("container").clientHeight / 800);
+            Layout.zoom = Math.min(2, document.getElementById("container").clientHeight / 800);
         }
     }
     Layout.NOTERADIUS = 18;

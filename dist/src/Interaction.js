@@ -71,6 +71,7 @@ export class InteractionScore {
             };
             document.getElementById("voiceButtonPalette").appendChild(b);
         }
+        document.getElementById("time").onchange = () => this.askUpdate();
         const keysSelect = document.getElementById("keys");
         keysSelect.innerHTML = "";
         let pitchs = [];
