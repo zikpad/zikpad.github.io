@@ -19,16 +19,8 @@ function resize() {
 }
 let score = new Score();
 let interactionScore;
-function init() {
-    score = new Score();
-    document.getElementById("svg").setAttribute("height", Layout.HEIGHT.toString());
-    document.getElementById("lilypond").addEventListener("click", () => document.getElementById("lilypond").select());
-    interactionScore = new InteractionScore(score);
-    window.onresize = resize;
-    setTimeout(resize, 100);
-    document.getElementById("downloadLilypond").style.visibility = "hidden";
+function setup() {
     try {
-        Layout.zoom = 0.5;
         /** setting when desktop app*/
         const ipc = require('electron').ipcRenderer;
         ipc.on("new", () => init());
@@ -43,6 +35,7 @@ function init() {
         new OpenFileDragDrop((file) => {
             ipc.send("open", file.path);
         });
+        document.getElementById("downloadLilypond").style.visibility = "hidden";
     }
     catch (e) {
         /** setting when online web app*/
@@ -69,6 +62,17 @@ function init() {
             reader.readAsText(file, 'UTF-8');
         });
     }
+}
+function init() {
+    window.onresize = resize;
+    resize();
+    setTimeout(resize, 50);
+    setup();
+    score = new Score();
+    document.getElementById("svg").setAttribute("height", Layout.HEIGHT.toString());
+    document.getElementById("lilypond").addEventListener("click", () => document.getElementById("lilypond").select());
+    interactionScore = new InteractionScore(score);
+    //document.getElementById("downloadLilypond").style.visibility = "hidden";
 }
 /**
  *
