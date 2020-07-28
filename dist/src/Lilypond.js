@@ -99,7 +99,7 @@ export class Lilypond {
                 lines.push(`%ZIKPAD voice ${i}`);
                 for (let note of score.voices[i].notes) {
                     if (note.isSilence())
-                        lines.push(`%ZIKPAD ${note.x} ${note.pitchName} silence`);
+                        lines.push(`%ZIKPAD ${note.x} ${note.pitch.lilypondName} silence`);
                     else
                         lines.push(`%ZIKPAD ${note.x} ${note.pitchName}`);
                 }

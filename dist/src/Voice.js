@@ -59,7 +59,10 @@ let Voice = /** @class */ (() => {
             return false;
         }
     }
-    Voice.voiceColors = ["black", "red", "brown", "orange", "green"];
+    Voice.voiceColors = ["black", "DarkSlateGrey", "gray", "lightgray",
+        "red", "orange", "DarkOrange", "GoldenRod",
+        "brown", "Maroon", "Peru", "SaddleBrown",
+        "Pink", "RosyBrown", "SandyBrown", "Thistle"];
     return Voice;
 })();
 export { Voice };
