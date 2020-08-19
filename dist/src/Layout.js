@@ -31,6 +31,9 @@ let Layout = /** @class */ (() => {
         static get xLeftScreen() {
             return document.getElementById("container").scrollLeft / Layout._zoom;
         }
+        static get yLeftScreen() {
+            return document.getElementById("container").scrollTop / Layout._zoom;
+        }
         static set xLeftScreen(x) {
             document.getElementById("container").scrollLeft = x * Layout._zoom;
         }

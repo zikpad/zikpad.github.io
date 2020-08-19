@@ -131,8 +131,8 @@ export class InteractionScore {
     do(command) { this.undoRedo.do(command); this.update(); ContextualMenu.hide(); }
     doKeepMenu(command) { this.undoRedo.do(command); this.update(); }
     actionDelete() {
-        let command = new CommandGroup();
-        for (let note of this.selection)
+        const command = new CommandGroup();
+        for (const note of this.selection)
             command.push(new CommandDeleteNote(note));
         this.do(command);
         this.selection = new Set();
@@ -140,10 +140,10 @@ export class InteractionScore {
         ContextualMenu.hide();
     }
     actionToggle() {
-        let command = new CommandGroup();
-        for (let note of this.selection)
+        const command = new CommandGroup();
+        for (const note of this.selection)
             command.push(new CommandToggleNote(note));
-        this.do(command);
+        this.doKeepMenu(command);
     }
     actionAccidentalUp() {
         let command = new CommandGroup();
@@ -152,8 +152,8 @@ export class InteractionScore {
         this.doKeepMenu(command);
     }
     actionAccidentalDown() {
-        let command = new CommandGroup();
-        for (let note of this.selection)
+        const command = new CommandGroup();
+        for (const note of this.selection)
             command.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.max(-2, note.accidental - 1))));
         this.doKeepMenu(command);
     }
@@ -163,16 +163,16 @@ export class InteractionScore {
         this.updateAsked = false;
     }
     setup() {
-        let circles = document.getElementsByClassName("note");
+        const circles = document.getElementsByClassName("note");
         for (let i = 0; i < circles.length; i++) {
-            let circle = circles[i];
+            const circle = circles[i];
             circle.classList.remove("selection");
             circle.onmousedown = (evt) => this.startDrag(evt);
             circle.onmousemove = (evt) => this.drag(evt);
             circle.onmouseup = (evt) => this.endDrag(evt);
         }
         if (this.selection.size >= 1)
-            for (let note of this.selection) {
+            for (const note of this.selection) {
                 note.domElement.classList.add("selection");
                 this.interactionRecordingMicrophone.x = note.x;
             }
@@ -215,9 +215,9 @@ export class InteractionScore {
         this.offset = this.getOffset(evt, this.selection);
     }
     getOffset(evt, selection) {
-        let r = new Map();
-        for (let note of selection) {
-            let p = Layout.clientToXY(evt);
+        const r = new Map();
+        for (const note of selection) {
+            const p = Layout.clientToXY(evt);
             p.x -= parseFloat(note.domElement.getAttributeNS(null, "cx"));
             p.y -= parseFloat(note.domElement.getAttributeNS(null, "cy"));
             r.set(note, p);
@@ -311,7 +311,7 @@ export class InteractionScore {
                 this.selection = new Set();
             else if (!this.interactionRecordingMicrophone.isActive()) {
                 let p = Layout.clientToXY(evt);
-                let note = new Note(p.x + Layout.xLeftScreen, Harmony.accidentalize(new Pitch(Layout.getPitchValue(p.y), 0), this.key));
+                let note = new Note(p.x + Layout.xLeftScreen, Harmony.accidentalize(new Pitch(Layout.getPitchValue(p.y + Layout.yLeftScreen), 0), this.key));
                 this.do(new CommandAddNote(this.currentVoice, note));
             }
             ContextualMenu.hide();

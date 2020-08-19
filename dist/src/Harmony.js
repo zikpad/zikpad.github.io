@@ -82,8 +82,8 @@ export class Harmony {
      * @returns the same pitch but in the key (e.g. G# in Eb is Ab)
      */
     static enharmonic(pitch, key) {
-        let pitch0 = Harmony.add(pitch, new Pitch(-key.value, -key.accidental));
-        let pitch0e = Harmony.midiPitchToPitch(pitch0.nbHalfTones);
+        const pitch0 = Harmony.add(pitch, new Pitch(-key.value, -key.accidental));
+        const pitch0e = Harmony.midiPitchToPitch(pitch0.nbHalfTones);
         return Harmony.add(pitch0e, key);
     }
     /**
@@ -93,7 +93,7 @@ export class Harmony {
     
      */
     static getAccidentals(key) {
-        let array = [];
+        const array = [];
         for (let i = 0; i < 7; i++) {
             let newPitch = Harmony.modulo(Harmony.add(new Pitch(i, 0), key));
             array[newPitch.value] = newPitch.accidental;
