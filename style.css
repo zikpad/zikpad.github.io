@@ -1,6 +1,266 @@
-.button {
-    padding: 16px;
-    margin: 32px;
-    background: rgb(47, 198, 236);
-    border-radius: 8px;
+svg {
+	width: 20000px;
+}
+
+
+line {
+	pointer-events: none;
+}
+
+input {
+	width: 500px;
+	color: orange;
+}
+
+
+#container {
+	overflow-x: scroll;
+	overflow-y: auto;
+
+}
+
+
+
+
+#content {
+	position: relative;
+	transform-origin: 0% 0% 0px;
+	transform-style: flat;
+}
+
+
+#container div div {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+
+.note {
+	stroke-width: 3px;
+	cursor: pointer;
+}
+
+
+
+.eighth {
+	position: absolute;
+	background-image: url("./img/eighth.svg");
+	width: 16px;
+	height:32px;
+	background-size: 16px 32px;
+}
+
+text {
+	font-size: 28px;
+	pointer-events: none;
+}
+
+.rest {
+	font-size: 48px;
+	text-anchor: middle;
+}
+
+
+@keyframes pulse {
+	from {
+		transform: translate(0px, 2px);
+		opacity: 1;
+	}
+
+	50% {
+		transform: translate(3px, -1px);
+		opacity: 0.5;
+	}
+
+	to {
+		transform: translate(-3px, -1px);
+		opacity: 1;
+	}
+}
+
+.note:hover {
+	stroke-width: 7px;
+}
+
+.selection {
+	animation: pulse 1s infinite;
+}
+
+
+.selectionRectangle {
+	opacity: 0.5;
+	fill: blue;
+	pointer-events: none;
+}
+
+.played {
+	opacity: 0.3;
+}
+
+.silence {
+	fill: white;
+	stroke: rgb(219, 219, 219);
+	opacity: 0.3;
+}
+
+
+#palette {
+	bottom: 0px;
+}
+
+
+#palette div {
+	display: inline;
+}
+
+#lilypondPalette {
+	visibility: hidden;
+	display: none;
+}
+
+
+#tempo {
+	width: 128px;
+	color: black;
+}
+
+
+.silence:hover {
+	stroke: rgb(163, 226, 255);
+}
+
+
+
+
+
+
+
+
+
+
+.btn {
+	background-color: DodgerBlue;
+	/* Blue background */
+	border: solid 1px black;
+	border-radius: 16px;
+	color: white;
+	/* White text */
+	padding: 12px 16px;
+	/* Some padding */
+	font-size: 18px;
+	/* Set a font size */
+	cursor: pointer;
+	/* Mouse pointer on hover */
+	position: absolute;
+	width: 48px;
+	height: 48px;
+}
+
+
+
+.btnfixed {
+	background-color: DodgerBlue;
+	/* Blue background */
+	border: solid 1px black;
+	border-radius: 16px;
+	color: white;
+	/* White text */
+	padding: 12px 16px;
+	/* Some padding */
+	font-size: 18px;
+	/* Set a font size */
+	cursor: pointer;
+	/* Mouse pointer on hover */
+	width: 48px;
+	height: 48px;
+}
+
+/* Darker background on mouse-over */
+.btn:hover {
+	background-color: RoyalBlue;
+}
+
+
+.btnfixed:hover {
+	background-color: RoyalBlue;
+}
+
+
+
+
+
+.voiceButton {
+	border: 1px solid white;
+	width: 32px;
+	height: 32px;
+	padding: 12px 16px;
+	font-size: 16px;
+	border-radius: 16px;
+	background: white;
+	cursor: pointer;
+}
+
+.voiceButton:hover {
+	border: solid 1px black;
+}
+
+
+.voiceButton:checked {
+	border: solid 2px black;
+}
+
+#playButton {
+	left: 20px;
+	top: 10px;
+}
+
+
+#recordMicrophoneButton {
+	left: 70px;
+	top: 10px;
+}
+
+
+
+#stopRecordMicrophoneButton {
+	left: 70px;
+	top: 10px;
+}
+
+#downloadLilypond {
+	left: 130px;
+	top: 10px;
+}
+
+
+
+#microphoneInput {
+	position: absolute;
+	width: 32px;
+	height: 32px;
+	border-radius: 16px;
+	border: dashed 2px black;
+}
+
+
+
+
+
+.delete {
+	fill: gray;
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+
+polyline {
+	fill: none;
+	stroke: rgb(44, 192, 218);
+	stroke-width: 4px;
+	pointer-events: none;
+}
+
+
+.phantomNote {
+	opacity: 0.2;
 }
