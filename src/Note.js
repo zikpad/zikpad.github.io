@@ -11,10 +11,10 @@ function accidentalToSymbol(a) {
     }
 }
 export class Note {
-    constructor(x, pitch) {
+    constructor(x, pitch, silence = false) {
         this.x = x;
         this.pitch = pitch;
-        this.silence = false;
+        this.silence = silence;
         this.color = "black";
         this.domElement = Drawing.note(this.x, this.y, Layout.NOTERADIUS);
         this.svgTextAccidental = Drawing.text(this.x - Layout.NOTERADIUS * 2, this.y + Layout.NOTERADIUS / 2, accidentalToSymbol(this.accidental));
@@ -22,6 +22,8 @@ export class Note {
         this.svgRest.classList.add("rest");
         this.svgRest.style.visibility = "hidden";
         this.domElement.note = this;
+        if (this.silence)
+            this.updateToggle();
     }
     setColor(color) {
         this.color = color;
@@ -43,17 +45,20 @@ export class Note {
         document.getElementById("svg").appendChild(this.svgTextAccidental);
         document.getElementById("svg").appendChild(this.svgRest);
     }
-    /**
-     * toggle Silence <-> Not Silence (Real note)
-     */
-    toggle() {
-        this.silence = !this.silence;
+    updateToggle() {
         this.svgTextAccidental.style.visibility = this.silence ? "hidden" : "visible";
         this.svgRest.style.visibility = this.silence ? "visible" : "hidden";
         if (this.domElement.classList.contains("silence"))
             this.domElement.classList.remove("silence");
         else
             this.domElement.classList.add("silence");
+    }
+    /**
+     * toggle Silence <-> Not Silence (Real note)
+     */
+    toggle() {
+        this.silence = !this.silence;
+        this.updateToggle();
     }
     isSilence() {
         return this.silence;

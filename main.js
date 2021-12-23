@@ -1,3 +1,4 @@
+import { MIDIInput } from './src/MidiInput.js';
 /**
  * This file will be transformed in the main.js included in dist/index.html
  */
@@ -21,6 +22,7 @@ let score = new Score();
 let interactionScore;
 function setup() {
     try {
+        MIDIInput.init();
         /** setting when desktop app*/
         const ipc = require('electron').ipcRenderer;
         ipc.on("new", () => init());
@@ -44,11 +46,11 @@ function setup() {
             download("myscore.ly", Lilypond.getCode(score));
         };
         document.addEventListener("keydown", (evt) => {
-            if (evt.ctrlKey && evt.keyCode == KeyEvent.DOM_VK_Z) {
-                interactionScore.undo();
-            }
-            else if (evt.ctrlKey && evt.shiftKey && evt.keyCode == KeyEvent.DOM_VK_Z) {
+            if (evt.ctrlKey && evt.shiftKey && evt.keyCode == KeyEvent.DOM_VK_Z) {
                 interactionScore.redo();
+            }
+            else if (evt.ctrlKey && evt.keyCode == KeyEvent.DOM_VK_Z) {
+                interactionScore.undo();
             }
         });
         new OpenFileDragDrop((file) => {
@@ -66,7 +68,7 @@ function setup() {
 function init() {
     window.onresize = resize;
     resize();
-    setTimeout(resize, 50);
+    setTimeout(resize, 200);
     setup();
     score = new Score();
     document.getElementById("svg").setAttribute("height", Layout.HEIGHT.toString());
