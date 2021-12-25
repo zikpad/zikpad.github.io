@@ -31,6 +31,9 @@ let Layout = /** @class */ (() => {
         static get xLeftScreen() {
             return document.getElementById("container").scrollLeft / Layout._zoom;
         }
+        static get xRightScreen() {
+            return (document.getElementById("container").scrollLeft + window.innerWidth) / Layout._zoom;
+        }
         static get yLeftScreen() {
             return document.getElementById("container").scrollTop / Layout._zoom;
         }
@@ -44,7 +47,7 @@ let Layout = /** @class */ (() => {
     Layout.NOTERADIUS = 18;
     Layout.NOTERADIUSX = 18;
     Layout.WIDTHONE = 800;
-    Layout.WIDTH = 20000;
+    Layout.WIDTH = 50000;
     Layout.HEIGHT = 800;
     Layout.BASELINE = Layout.HEIGHT * 2 / 4;
     Layout.RYTHMY = -4 * Layout.NOTERADIUS;

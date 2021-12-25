@@ -21,9 +21,10 @@ export class InteractionScore {
     constructor(score) {
         this.score = score;
         this.undoRedo = new UndoRedo();
+        this.clipBoard = new Set();
         this.selection = new Set();
         this.dragOccurred = false;
-        this.dragCommand = undefined;
+        this.pasteCommand = undefined;
         this.x = 0;
         this.updateAsked = false;
         this.player = undefined;
@@ -79,11 +80,15 @@ export class InteractionScore {
             b.onclick = () => {
                 this.currentVoice = score.voices[i];
                 let command = new CommandGroup();
-                for (let note of this.selection) {
+                for (let note of this.selection)
                     command.push(new CommandChangeVoiceNote(note, this.currentVoice));
-                }
                 this.do(command);
+                for (const button of document.getElementsByClassName("voiceButton"))
+                    button.classList.remove("active");
+                b.classList.add("active");
             };
+            if (i == 0)
+                b.classList.add("active");
             document.getElementById("voiceButtonPalette").appendChild(b);
         }
         document.getElementById("time").onchange = () => this.askUpdate();
@@ -144,6 +149,30 @@ export class InteractionScore {
     redo() { this.undoRedo.redo(); this.update(); ContextualMenu.hide(); }
     do(command) { this.undoRedo.do(command); this.update(); ContextualMenu.hide(); }
     doKeepMenu(command) { this.undoRedo.do(command); this.update(); }
+    actionCut() {
+        this.clipBoard = createClipBoard(this.selection);
+        this.actionDelete();
+    }
+    actionCopy() {
+        this.clipBoard = createClipBoard(this.selection);
+    }
+    actionPaste() {
+        let xmin = Infinity;
+        for (const noteInfo of this.clipBoard) {
+            xmin = Math.min(xmin, noteInfo.x);
+        }
+        this.pasteCommand = new CommandGroup();
+        const x0 = document.getElementById("container").scrollLeft + 50;
+        this.selection = new Set();
+        for (const { voice, x, pitch, silence } of this.clipBoard) {
+            const note = new Note(x - xmin + x0, pitch, silence);
+            this.pasteCommand.push(new CommandAddNote(voice, note));
+            this.selection.add(note);
+        }
+        this.do(this.pasteCommand);
+        this.update();
+    }
+    /**delete the selection */
     actionDelete() {
         const command = new CommandGroup();
         for (const note of this.selection)
@@ -174,6 +203,18 @@ export class InteractionScore {
             command.push(new CommandUpdateNote(note, note.x, new Pitch(note.pitch.value, Math.max(-2, note.accidental - 1))));
         this.doKeepMenu(command);
     }
+    actionMoveX(dx) {
+        const command = new CommandGroup();
+        for (const note of this.selection)
+            command.push(new CommandUpdateNote(note, note.x + dx, note.pitch));
+        this.doKeepMenu(command);
+    }
+    actionMoveY(dy) {
+        const command = new CommandGroup();
+        for (const note of this.selection)
+            command.push(new CommandUpdateNote(note, note.x, Harmony.accidentalize(new Pitch(note.pitch.value + dy, 0), this.key)));
+        this.doKeepMenu(command);
+    }
     update() {
         this.score.update();
         this.setup();
@@ -194,12 +235,24 @@ export class InteractionScore {
                 this.x = note.x;
             }
         document.onkeydown = (evt) => {
-            if (evt.keyCode == KeyEvent.DOM_VK_DELETE) {
+            if (evt.keyCode == KeyEvent.DOM_VK_DELETE)
                 this.actionDelete();
-            }
-            if (evt.keyCode == KeyEvent.DOM_VK_SPACE) {
+            if (evt.keyCode == KeyEvent.DOM_VK_SPACE)
                 this.actionToggle();
-            }
+            if (evt.keyCode == KeyEvent.DOM_VK_LEFT)
+                this.actionMoveX(-10);
+            if (evt.keyCode == KeyEvent.DOM_VK_RIGHT)
+                this.actionMoveX(10);
+            if (evt.keyCode == KeyEvent.DOM_VK_UP)
+                this.actionMoveY(1);
+            if (evt.keyCode == KeyEvent.DOM_VK_DOWN)
+                this.actionMoveY(-1);
+            if (evt.ctrlKey && evt.keyCode == KeyEvent.DOM_VK_X)
+                this.actionCut();
+            if (evt.ctrlKey && evt.keyCode == KeyEvent.DOM_VK_C)
+                this.actionCopy();
+            if (evt.ctrlKey && evt.keyCode == KeyEvent.DOM_VK_V)
+                this.actionPaste();
         };
         document.getElementById("svgBackground").onmousedown = (evt) => this.mouseDownBackground(evt);
         document.getElementById("svgBackground").onmousemove = (evt) => this.drag(evt);
@@ -224,7 +277,7 @@ export class InteractionScore {
         this.dragOccurred = false;
         this.dragCopyMade = false;
         this.draggedNote = evt.target.note;
-        this.dragCommand = undefined;
+        this.pasteCommand = undefined;
         if (this.draggedNote && !this.dragOccurred && (!this.selection.has(this.draggedNote))) {
             if (evt.ctrlKey)
                 this.selection = this.selection.add(this.draggedNote);
@@ -265,14 +318,27 @@ export class InteractionScore {
         else if (this.draggedNote) {
             evt.preventDefault();
             let coord = Layout.clientToXY(evt);
-            if (this.dragCommand == undefined) {
+            const dxshiftScreen = 32;
+            if (evt.clientX < 100 && Layout.xLeftScreen > dxshiftScreen) {
+                Layout.xLeftScreen -= dxshiftScreen;
+                for (const note of this.offset.keys()) {
+                    this.offset.get(note).x += dxshiftScreen;
+                }
+            }
+            if (evt.clientX > window.innerWidth - 100) {
+                Layout.xLeftScreen += dxshiftScreen;
+                for (const note of this.offset.keys()) {
+                    this.offset.get(note).x -= dxshiftScreen;
+                }
+            }
+            if (this.pasteCommand == undefined) {
                 if (evt.ctrlKey) {
-                    this.dragCommand = new CommandGroup();
-                    let newSelection = [];
-                    for (let note of this.selection) {
-                        let newNote = new Note(note.x, note.pitch, note.isSilence());
+                    this.pasteCommand = new CommandGroup();
+                    const newSelection = [];
+                    for (const note of this.selection) {
+                        const newNote = new Note(note.x, note.pitch, note.isSilence());
                         newSelection.push(newNote);
-                        this.dragCommand.push(new CommandAddNote(note.voice, newNote));
+                        this.pasteCommand.push(new CommandAddNote(note.voice, newNote));
                     }
                     this.selection = new Set(newSelection);
                     this.offset = this.getOffset(evt, this.selection);
@@ -280,26 +346,26 @@ export class InteractionScore {
                     for (let note of this.selection) {
                         let dx = coord.x - this.offset.get(note).x;
                         let dy = coord.y - this.offset.get(note).y;
-                        this.dragCommand.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
+                        this.pasteCommand.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
                     }
                 }
                 else {
-                    this.dragCommand = new CommandGroup();
+                    this.pasteCommand = new CommandGroup();
                     for (let note of this.selection) {
                         let dx = coord.x - this.offset.get(note).x;
                         let dy = coord.y - this.offset.get(note).y;
-                        this.dragCommand.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
+                        this.pasteCommand.push(new CommandUpdateNote(note, dx, Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key)));
                     }
                 }
-                this.do(this.dragCommand);
+                this.do(this.pasteCommand);
             }
             let i = 0;
             for (let note of this.selection) {
                 let dx = coord.x - this.offset.get(note).x;
                 let dy = coord.y - this.offset.get(note).y;
-                let command = (this.dragCommand.size == this.selection.size) ?
-                    this.dragCommand.get(i) :
-                    this.dragCommand.get(this.selection.size + i);
+                let command = (this.pasteCommand.size == this.selection.size) ?
+                    this.pasteCommand.get(i) :
+                    this.pasteCommand.get(this.selection.size + i);
                 let pitch = Harmony.accidentalize(new Pitch(Layout.getPitchValue(dy), 0), this.key);
                 note.update(dx, pitch);
                 command.update(dx, pitch);
@@ -310,6 +376,8 @@ export class InteractionScore {
         }
     }
     endDrag(evt) {
+        const updateAfterEndDrag = () => {
+        };
         if (this.interactionInsertTime.isActive) {
             this.do(this.interactionInsertTime.stop());
         }
@@ -323,6 +391,7 @@ export class InteractionScore {
                 this.selection = new Set(this.interactionSelection.getSelection());
             ContextualMenu.show(this.selection);
             this.interactionSelection = undefined;
+            document.getElementById("svg").style.cursor = "default";
         }
         //click outside a note
         else if (!this.draggedNote &&
@@ -334,11 +403,21 @@ export class InteractionScore {
                 let note = new Note(p.x + Layout.xLeftScreen, Harmony.accidentalize(new Pitch(Layout.getPitchValue(p.y + Layout.yLeftScreen), 0), this.key));
                 this.do(new CommandAddNote(this.currentVoice, note));
             }
+            document.getElementById("svg").style.cursor = "crosshair";
             ContextualMenu.hide();
         }
+        else //after clicking on a note
+            document.getElementById("svg").style.cursor = "default";
         this.interactionSelection = null;
         this.draggedNote = null;
         this.update();
     }
+}
+function createClipBoard(selection) {
+    const newSelection = [];
+    for (const note of selection) {
+        newSelection.push({ voice: note.voice, x: note.x, pitch: note.pitch, silence: note.isSilence() });
+    }
+    return new Set(newSelection);
 }
 //# sourceMappingURL=Interaction.js.map

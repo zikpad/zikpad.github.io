@@ -1,3 +1,4 @@
+import { Layout } from './Layout.js';
 import { VoiceSounds } from './Sound.js';
 export class Player {
     constructor(score, startingTime) {
@@ -21,6 +22,10 @@ export class Player {
         }
         ;
         this.t += WINDOW;
+        /** scroll when it plays outside the window */
+        const x = Layout.getX(this.t);
+        if (x > Layout.xRightScreen)
+            Layout.xLeftScreen = x;
         for (let i in this.score.voices) {
             let voice = this.score.voices[i];
             let notes = voice.getNotesBetween(this.t - WINDOW, this.t);
