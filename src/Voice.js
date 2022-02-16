@@ -3,31 +3,39 @@ import { Layout } from "./Layout.js";
 let Voice = /** @class */ (() => {
     class Voice {
         constructor(color) {
+            this.color = color;
             this.notes = [];
             this.timeSteps = [];
             this.color = color;
         }
-        isEmpty() {
-            return this.notes.length == 0;
-        }
+        /**
+         *
+         * @returns true iff the voice contains notes
+         */
+        isEmpty() { return this.notes.length == 0; }
+        /**
+         * returns notes between time t1 and time t2
+         */
         getNotesBetween(t1, t2) {
             let result = [];
-            for (let timeStep of this.timeSteps) {
+            for (const timeStep of this.timeSteps) {
                 if ((t1 <= timeStep.t) && (timeStep.t < t2))
                     result = result.concat(timeStep.notes);
             }
             return result;
         }
+        /**
+         *
+         * @param note
+         * @description remove the note from the voice, if that note belongs to the voice
+         */
         removeNote(note) {
             const index = this.notes.indexOf(note);
-            if (index > -1) {
+            if (index > -1)
                 this.notes.splice(index, 1);
-            }
         }
-        draw() {
-            for (let note of this.notes)
-                note.draw();
-        }
+        draw() { for (const note of this.notes)
+            note.draw(); }
         addNote(note) {
             note.setColor(this.color);
             note.setVoice(this);
@@ -49,7 +57,7 @@ let Voice = /** @class */ (() => {
          *
          * @param x
          * @param pitch
-         * @returns true if there is a note at abscisse x and at pitch pitch
+         * @returns true if there is a note at abscisse x (~) and at pitch pitch
          */
         contains(x, pitch) {
             for (let note of this.notes) {
@@ -84,9 +92,18 @@ export class TimeStep {
             return true;
         return false;
     }
-    isSilence() {
-        return this.notes.every((note) => note.isSilence());
+    isDoubleDot() {
+        if (equalReal(this._duration, 0.875))
+            return true;
+        if (equalReal(this._duration, 0.875 / 2))
+            return true;
+        if (equalReal(this._duration, 0.875 / 4))
+            return true;
+        if (equalReal(this._duration, 0.875 / 8))
+            return true;
+        return false;
     }
+    isSilence() { return this.notes.every((note) => note.isSilence()); }
     getPitchs() {
         if (this.notes.length > 1) {
             let s = "<";
@@ -106,48 +123,52 @@ export class TimeStep {
     get duration() {
         return this._duration;
     }
+    /**
+     * compute the average of the x of the notes
+     */
     get x() {
         let s = 0;
-        for (let note of this.notes)
+        for (const note of this.notes)
             s += note.x;
         return s / this.notes.length;
     }
     get xLine() {
         const x = this.x;
-        let minX = 1000000;
-        let maxX = -1000000;
-        for (let note of this.notes) {
-            minX = Math.min(note.x, minX);
-            maxX = Math.max(note.x, maxX);
-        }
-        if (Math.abs(minX - maxX) < Layout.NOTERADIUSX / 2)
+        const notesAroundTheVerticalLine = () => {
+            let minX = 1000000;
+            let maxX = -1000000;
+            for (const note of this.notes) {
+                minX = Math.min(note.x, minX);
+                maxX = Math.max(note.x, maxX);
+            }
+            return Math.abs(minX - maxX) < Layout.NOTERADIUSX / 2;
+        };
+        if (notesAroundTheVerticalLine())
             return x + Layout.NOTERADIUSX;
         else
             return x;
     }
     get yDown() {
         let y = -100000;
-        for (let note of this.notes) {
+        for (const note of this.notes) {
             y = Math.max(y, Layout.getY(note.pitch));
         }
         return y;
     }
     get yTop() {
         let y = 100000;
-        for (let note of this.notes) {
+        for (const note of this.notes) {
             y = Math.min(y, Layout.getY(note.pitch));
         }
         return y;
     }
-    get yRythm() {
-        return this.yTop + Layout.RYTHMY;
-    }
+    get yRythm() { return this.yTop + Layout.RYTHMY; }
 }
-function getTimeSteps(score) {
+function getTimeSteps(voice) {
     let timeSteps = [];
     let previousNote = undefined;
-    score.notes.sort((n1, n2) => n1.x - n2.x);
-    for (let note of score.notes) {
+    voice.notes.sort((n1, n2) => n1.x - n2.x);
+    for (const note of voice.notes) {
         if (previousNote) {
             if (Math.abs(note.x - previousNote.x) < 2 * Layout.NOTERADIUS)
                 timeSteps[timeSteps.length - 1].notes.push(note);
@@ -163,7 +184,5 @@ function getTimeSteps(score) {
     }
     return timeSteps;
 }
-function equalReal(v, v2) {
-    return Math.abs(v - v2) < 0.001;
-}
+function equalReal(v, v2) { return Math.abs(v - v2) < 0.001; }
 //# sourceMappingURL=Voice.js.map

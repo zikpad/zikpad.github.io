@@ -85,6 +85,8 @@ export class Lilypond {
                 s += Lilypond.getDurationBasisLilypond(voice.timeSteps[i].duration);
                 if (voice.timeSteps[i].isDot())
                     s += ".";
+                else if (voice.timeSteps[i].isDoubleDot())
+                    s += "..";
                 s += " ";
                 i++;
             }
