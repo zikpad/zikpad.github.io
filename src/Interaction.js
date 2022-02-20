@@ -142,7 +142,27 @@ export class InteractionScore {
         document.getElementById("delete").onclick = () => { this.actionDelete(); };
         document.getElementById("toggle").onclick = () => { this.actionToggle(); };
         document.getElementById("accidentalUp").onclick = () => { this.actionAccidentalUp(); };
+        document.getElementById("uniformizeDurations").onclick = () => { this.actionDurationUniformize(); };
         document.getElementById("accidentalDown").onclick = () => { this.actionAccidentalDown(); };
+        {
+            const buttonScaleX = document.getElementById("scalex");
+            let x = 0;
+            let buttonDown = false;
+            buttonScaleX.onmousemove = (evt) => {
+                if (buttonDown) {
+                    const delta = evt.clientX - x;
+                    this.actionScaleX(delta);
+                    x = evt.clientX;
+                }
+            };
+            buttonScaleX.onmouseup = (evt) => { window.onmousemove = () => { }; buttonDown = false; };
+            buttonScaleX.onmousedown = (evt) => {
+                x = evt.clientX;
+                window.onmousemove = buttonScaleX.onmousemove;
+                window.onmouseup = buttonScaleX.onmouseup;
+                buttonDown = true;
+            };
+        }
         this.setup();
     }
     undo() { this.undoRedo.undo(); this.update(); ContextualMenu.hide(); }
@@ -181,6 +201,30 @@ export class InteractionScore {
         this.selection = new Set();
         this.update();
         ContextualMenu.hide();
+    }
+    actionDurationUniformize() {
+        const command = new CommandGroup();
+        const notes = Array.from(this.selection);
+        notes.sort((n1, n2) => n1.x - n2.x);
+        const x1 = notes[0].x;
+        const x2 = notes[notes.length - 1].x;
+        if (x2 - x1 <= 0)
+            return;
+        for (let i = 0; i < notes.length; i++) {
+            const note = notes[i];
+            command.push(new CommandUpdateNote(note, x1 + i * (x2 - x1) / (notes.length - 1), note.pitch));
+        }
+        this.doKeepMenu(command);
+    }
+    actionScaleX(delta) {
+        const command = new CommandGroup();
+        const x0 = Math.min(...Array.from(this.selection).map((note) => note.x));
+        const ARF = 500;
+        const f = (ARF + delta) / ARF;
+        for (const note of this.selection) {
+            command.push(new CommandUpdateNote(note, x0 + (note.x - x0) * f, note.pitch));
+        }
+        this.doKeepMenu(command);
     }
     /**
      * toogle note <==> silence
@@ -253,6 +297,9 @@ export class InteractionScore {
                 this.actionCopy();
             if (evt.ctrlKey && evt.keyCode == KeyEvent.DOM_VK_V)
                 this.actionPaste();
+            if (evt.key == "u") {
+                this.actionDurationUniformize();
+            }
         };
         document.getElementById("svgBackground").onmousedown = (evt) => this.mouseDownBackground(evt);
         document.getElementById("svgBackground").onmousemove = (evt) => this.drag(evt);

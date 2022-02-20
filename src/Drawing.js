@@ -20,7 +20,7 @@ export class Drawing {
         document.getElementById("svg").appendChild(aCircle);
         return aCircle;
     }
-    static ellipse(x, y, rx, ry) {
+    static createEllipse(x, y, rx, ry) {
         let aCircle = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
         aCircle.setAttribute('cx', x);
         aCircle.setAttribute('cy', y);
@@ -28,11 +28,11 @@ export class Drawing {
         aCircle.setAttribute('ry', ry);
         aCircle.setAttribute('stroke', "black");
         aCircle.setAttribute('stroke-width', "1");
-        document.getElementById("svg").appendChild(aCircle);
         return aCircle;
     }
     static note(x, y, r) {
-        let element = Drawing.ellipse(x, y, r, r);
+        let element = Drawing.createEllipse(x, y, r, r);
+        document.getElementById("notes").appendChild(element);
         element.classList.add("note");
         return element;
     }
@@ -65,6 +65,7 @@ export class Drawing {
         element.classList.add("eighth");
         element.style.left = x1 + "px";
         element.style.top = y1 + "px";
+        element.style.pointerEvents = "none";
         document.getElementById("data").appendChild(element);
     }
     static rectangle(x1, y1, width, height) {

@@ -27,6 +27,15 @@ export class Analyzer {
             else
                 timeSteps[i].duration = getDuration(getEndByDefault(timeSteps[i].t) - timeSteps[i].t);
         }
+        for (let i = 0; i < timeSteps.length; i++) {
+            let d = Infinity;
+            if (i > 0)
+                d = timeSteps[i - 1].duration;
+            d = Math.min(d, timeSteps[i].duration);
+            for (const note of timeSteps[i].notes) {
+                note.adaptRX(d);
+            }
+        }
     }
     /**
      * draw the extra information of the rhythm!
@@ -35,12 +44,18 @@ export class Analyzer {
         function drawRythmLine(timeStep) {
             if (timeStep.duration >= 0.25)
                 return;
-            Drawing.lineRythm(timeStep.xLine, timeStep.yRythm, timeStep.xLine + Layout.RYTHMX, timeStep.yRythm);
-            if (timeStep.duration > 0.25 / 4)
-                return;
-            Drawing.lineRythm(timeStep.xLine, timeStep.yRythm + Layout.RYTHMLINESSEP, timeStep.xLine + Layout.RYTHMX, timeStep.yRythm + Layout.RYTHMLINESSEP);
-            if (timeStep.duration > 0.25 / 8)
-                return;
+            for (let i = 0; i < 4; i++) {
+                const YSHIFT = i * Layout.RYTHMLINESSEP;
+                Drawing.lineRythm(timeStep.xLine, timeStep.yRythm + YSHIFT, timeStep.xLine + Layout.RYTHMX, timeStep.yRythm + YSHIFT);
+                if (timeStep.duration > 0.25 / (Math.pow(2, (i + 2))))
+                    return;
+            }
+            /*
+                        if (timeStep.duration > 0.25 / 4) return;
+            
+                        Drawing.lineRythm(timeStep.xLine, timeStep.yRythm + Layout.RYTHMLINESSEP, timeStep.xLine + Layout.RYTHMX, timeStep.yRythm + Layout.RYTHMLINESSEP);
+            
+                        if (timeStep.duration > 0.25 / 8) return;*/
         }
         for (let timeStep of this.voice.timeSteps) {
             if (!timeStep.isSilence()) {
@@ -99,6 +114,12 @@ function getDuration(dt) {
         0.75 / 4];
     for (const v of possibleValues)
         test(v);
+    for (const v of possibleValues)
+        test(v / 2);
+    for (const v of possibleValues)
+        test(v / 4);
+    for (const v of possibleValues)
+        test(v / 8);
     return result;
 }
 /**

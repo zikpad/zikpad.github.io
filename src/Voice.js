@@ -120,9 +120,7 @@ export class TimeStep {
         for (let note of this.notes)
             note.duration = d;
     }
-    get duration() {
-        return this._duration;
-    }
+    get duration() { return this._duration; }
     /**
      * compute the average of the x of the notes
      */
@@ -131,6 +129,24 @@ export class TimeStep {
         for (const note of this.notes)
             s += note.x;
         return s / this.notes.length;
+    }
+    layout() {
+        const x = this.x;
+        const previousPitch = this.notes[0].pitch;
+        const rx = this.notes[0].rx();
+        let isShift = true;
+        const SHIFT = rx;
+        for (let i = 1; i < this.notes.length; i++) {
+            const note = this.notes[i];
+            if (Math.abs(previousPitch.value - note.pitch.value) <= 1 && isShift) {
+                isShift = false;
+                note.domElement.setAttribute("cx", "" + (x + SHIFT));
+            }
+            else {
+                note.domElement.setAttribute("cx", "" + x);
+                isShift = true;
+            }
+        }
     }
     get xLine() {
         const x = this.x;
@@ -144,7 +160,7 @@ export class TimeStep {
             return Math.abs(minX - maxX) < Layout.NOTERADIUSX / 2;
         };
         if (notesAroundTheVerticalLine())
-            return x + Layout.NOTERADIUSX;
+            return x + this.notes[0].rx();
         else
             return x;
     }
@@ -168,9 +184,10 @@ function getTimeSteps(voice) {
     let timeSteps = [];
     let previousNote = undefined;
     voice.notes.sort((n1, n2) => n1.x - n2.x);
+    const THESHOLD = 8;
     for (const note of voice.notes) {
         if (previousNote) {
-            if (Math.abs(note.x - previousNote.x) < 2 * Layout.NOTERADIUS)
+            if (Math.abs(note.x - previousNote.x) < THESHOLD)
                 timeSteps[timeSteps.length - 1].notes.push(note);
             else {
                 previousNote = note;
@@ -181,6 +198,9 @@ function getTimeSteps(voice) {
             timeSteps.push(new TimeStep(note));
             previousNote = note;
         }
+    }
+    for (const timestep of timeSteps) {
+        timestep.layout();
     }
     return timeSteps;
 }
